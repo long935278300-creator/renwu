@@ -1,0 +1,1548 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>通航任务分配管理系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a6fd6;
+            --secondary: #764ba2;
+            --success: #4CAF50;
+            --warning: #FF9800;
+            --danger: #e74c3c;
+            --info: #3498db;
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --card-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            --header-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --border-radius: 16px;
+            --transition: all 0.3s ease;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI','Microsoft YaHei',sans-serif; }
+        body { background: var(--bg-gradient); min-height:100vh; color:#333; }
+
+        /* ====== Header ====== */
+        .header { background: var(--header-gradient); color:#fff; padding:28px 40px; text-align:center; }
+        .header h1 { font-size:2.4rem; margin-bottom:6px; }
+        .header p { font-size:1rem; opacity:.9; max-width:700px; margin:0 auto 18px; }
+        .stats-bar { display:flex; justify-content:center; gap:24px; margin-top:16px; flex-wrap:wrap; }
+        .stat-box {
+            background:rgba(255,255,255,.15); border-radius:12px; padding:12px 22px;
+            text-align:center; min-width:120px; backdrop-filter:blur(10px);
+        }
+        .stat-value { font-size:1.8rem; font-weight:700; display:block; }
+        .stat-label { font-size:.85rem; opacity:.9; }
+
+        /* ====== Tabs ====== */
+        .tab-bar { display:flex; background:#fff; border-bottom:2px solid #eaeaea; padding:0 30px; overflow-x:auto; }
+        .tab-btn {
+            padding:14px 24px; border:none; background:none; font-size:.95rem; font-weight:600;
+            color:#888; cursor:pointer; border-bottom:3px solid transparent; transition:var(--transition);
+            display:flex; align-items:center; gap:8px; white-space:nowrap;
+        }
+        .tab-btn:hover { color:var(--primary); }
+        .tab-btn.active { color:var(--primary); border-bottom-color:var(--primary); }
+        .tab-content { display:none; }
+        .tab-content.active { display:block; }
+
+        /* ====== Controls ====== */
+        .controls {
+            padding:18px 30px; background:#f8f9ff; display:flex; justify-content:space-between;
+            align-items:center; flex-wrap:wrap; gap:12px; border-bottom:1px solid #eaeaea;
+        }
+        .search-box { position:relative; flex-grow:1; max-width:340px; }
+        .search-box input {
+            width:100%; padding:10px 16px 10px 42px; border:2px solid #e0e0e0;
+            border-radius:10px; font-size:.95rem; transition:var(--transition);
+        }
+        .search-box input:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(102,126,234,.2); }
+        .search-box i { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#888; }
+
+        /* ====== Buttons ====== */
+        .btn {
+            padding:9px 18px; border:none; border-radius:10px; font-size:.9rem; font-weight:600;
+            cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:var(--transition);
+        }
+        .btn:hover { transform:translateY(-2px); }
+        .btn-primary { background:var(--header-gradient); color:#fff; }
+        .btn-primary:hover { box-shadow:0 8px 20px rgba(102,126,234,.3); }
+        .btn-success { background:var(--success); color:#fff; }
+        .btn-success:hover { box-shadow:0 8px 20px rgba(76,175,80,.3); }
+        .btn-warning { background:var(--warning); color:#fff; }
+        .btn-danger { background:var(--danger); color:#fff; }
+        .btn-info { background:var(--info); color:#fff; }
+        .btn-info:hover { box-shadow:0 8px 20px rgba(52,152,219,.3); }
+        .btn-sm { padding:5px 10px; font-size:.8rem; border-radius:8px; }
+        .btn-xs { padding:3px 8px; font-size:.75rem; border-radius:6px; }
+        .btn-icon { padding:5px 9px; border-radius:8px; border:none; cursor:pointer; font-size:.85rem; transition:var(--transition); }
+        .btn-edit { background:#e8f0fe; color:var(--primary); }
+        .btn-edit:hover { background:#d1d8ff; }
+        .btn-del { background:#fde8e8; color:var(--danger); }
+        .btn-del:hover { background:#fbd0d0; }
+        .btn-eq { background:#e8f5e9; color:var(--success); }
+        .btn-eq:hover { background:#c8e6c9; }
+        .action-buttons { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+
+        /* ====== Table ====== */
+        .table-container { padding:16px 30px 30px; overflow-x:auto; }
+        table { width:100%; border-collapse:collapse; border-radius:12px; overflow:hidden; box-shadow:0 4px 12px rgba(0,0,0,.05); }
+        thead { background:var(--header-gradient); color:#fff; }
+        th { padding:12px 10px; text-align:left; font-weight:600; font-size:.88rem; white-space:nowrap; }
+        tbody tr { border-bottom:1px solid #f0f0f0; transition:background .2s; }
+        tbody tr:hover { background:#f8f9ff; }
+        td { padding:10px; vertical-align:middle; font-size:.88rem; }
+
+        /* ====== Status Badges ====== */
+        .status-badge {
+            display:inline-flex; align-items:center; gap:5px; padding:4px 12px;
+            border-radius:20px; font-size:.78rem; font-weight:600; white-space:nowrap; cursor:pointer;
+            user-select:none; transition:var(--transition);
+        }
+        .status-badge:hover { transform:scale(1.05); }
+        .status-badge i { font-size:.7rem; }
+        .status-0 { background:#f5f5f5; color:#999; border:1px solid #e0e0e0; }
+        .status-1 { background:#fff3e0; color:#e65100; border:1px solid #ffcc80; }
+        .status-2 { background:#e3f2fd; color:#1565c0; border:1px solid #90caf9; }
+        .status-3 { background:#e8f5e9; color:#2e7d32; border:1px solid #a5d6a7; }
+        .status-select {
+            position:absolute; background:#fff; border:1px solid #ddd; border-radius:10px;
+            box-shadow:0 8px 24px rgba(0,0,0,.15); z-index:500; overflow:hidden; min-width:160px;
+        }
+        .status-select-item {
+            padding:10px 16px; cursor:pointer; font-size:.85rem; font-weight:500;
+            display:flex; align-items:center; gap:8px; transition:background .15s;
+        }
+        .status-select-item:hover { background:#f0f4ff; }
+        .status-select-item i { width:16px; text-align:center; }
+
+        /* ====== Person Card ====== */
+        .person-card {
+            background:#fff; border-radius:var(--border-radius); padding:20px; margin:15px 30px;
+            box-shadow:0 4px 16px rgba(0,0,0,.07); border:1px solid #eee; transition:var(--transition);
+        }
+        .person-card:hover { box-shadow:0 8px 24px rgba(0,0,0,.12); }
+        .person-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px; }
+        .person-name { font-size:1.3rem; font-weight:700; color:#2c3e50; }
+        .person-total { font-size:1.1rem; color:var(--primary); font-weight:600; }
+        .person-tasks { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:10px; }
+        .task-card {
+            background:#f8f9ff; border-radius:10px; padding:12px; border:1px solid #e8eaf6;
+            display:flex; justify-content:space-between; align-items:center; transition:var(--transition);
+        }
+        .task-card:hover { background:#eef0ff; }
+        .task-card .task-info { flex:1; min-width:0; }
+        .task-card .task-name-text { font-weight:600; color:#2c3e50; margin-bottom:4px; word-break:break-all; }
+        .task-card .task-link { font-size:.78rem; color:var(--info); word-break:break-all; }
+        .task-card .task-link a { color:var(--info); text-decoration:none; }
+        .task-card .task-link a:hover { text-decoration:underline; }
+        .task-card .task-qty {
+            min-width:70px; text-align:center; font-size:1rem; font-weight:700; color:var(--primary);
+            background:#fff; border-radius:8px; padding:6px 10px; box-shadow:0 2px 6px rgba(0,0,0,.08); margin-left:10px;
+        }
+        .no-data-msg { text-align:center; padding:60px 20px; color:#aaa; font-size:1.1rem; }
+
+        /* ====== Progress ====== */
+        .progress-wrap { width:100%; background:#f0f0f0; border-radius:8px; height:6px; margin-top:8px; overflow:hidden; }
+        .progress-fill { height:100%; background:var(--header-gradient); border-radius:8px; transition:width .5s; }
+
+        /* ====== Modal ====== */
+        .modal-overlay {
+            display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+            background:rgba(0,0,0,.5); z-index:1000; justify-content:center; align-items:center;
+        }
+        .modal-overlay.show { display:flex; }
+        .modal-box {
+            background:#fff; border-radius:20px; width:92%; max-width:640px; max-height:85vh;
+            overflow-y:auto; padding:30px; box-shadow:0 20px 60px rgba(0,0,0,.3); position:relative;
+        }
+        .modal-box::-webkit-scrollbar { width:6px; }
+        .modal-box::-webkit-scrollbar-thumb { background:#ccc; border-radius:3px; }
+        .modal-close {
+            position:absolute; top:16px; right:18px; font-size:1.6rem; cursor:pointer;
+            color:#888; background:none; border:none; transition:var(--transition);
+        }
+        .modal-close:hover { color:#333; }
+        .modal-title { font-size:1.3rem; color:#2c3e50; margin-bottom:20px; }
+        .modal-actions { display:flex; gap:12px; margin-top:24px; justify-content:flex-end; }
+
+        /* ====== Form ====== */
+        .form-group { margin-bottom:16px; }
+        .form-label { display:block; font-weight:600; margin-bottom:6px; color:#555; font-size:.9rem; }
+        .form-input, .form-select, .form-textarea {
+            width:100%; padding:10px 14px; border:2px solid #e0e0e0; border-radius:10px;
+            font-size:.95rem; transition:var(--transition); font-family:inherit;
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(102,126,234,.15);
+        }
+        .form-textarea { resize:vertical; min-height:60px; }
+
+        /* ====== Calculator ====== */
+        .calc-bar {
+            display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+            background:#fff; padding:14px 30px; border-bottom:1px solid #eaeaea;
+        }
+        .calc-bar label { font-size:.88rem; font-weight:600; color:#555; white-space:nowrap; }
+        .calc-bar input {
+            width:100px; padding:8px 12px; border:2px solid #e0e0e0; border-radius:8px;
+            font-size:.95rem; text-align:center; font-weight:600;
+        }
+        .calc-bar input:focus { outline:none; border-color:var(--primary); }
+        .calc-result {
+            background:linear-gradient(135deg,#667eea,#764ba2); color:#fff;
+            padding:8px 18px; border-radius:10px; font-weight:700; font-size:1rem;
+            min-width:180px; text-align:center;
+        }
+
+        /* ====== Import Section ====== */
+        .import-section {
+            padding:20px 30px; background:#f0f7ff; border:2px dashed #b3d4fc; border-radius:12px;
+            margin:15px 30px; text-align:center;
+        }
+        .import-section i { font-size:2rem; color:var(--primary); margin-bottom:10px; }
+        .import-section p { color:#666; margin-bottom:12px; }
+        .file-input-wrap { display:inline-flex; align-items:center; gap:10px; }
+        .file-input-wrap input[type="file"] { font-size:.9rem; }
+
+        /* ====== Toast ====== */
+        .toast {
+            position:fixed; bottom:24px; right:24px; padding:14px 24px; border-radius:10px;
+            color:#fff; font-weight:600; z-index:2000; transform:translateY(80px); opacity:0;
+            transition:all .4s; box-shadow:0 6px 20px rgba(0,0,0,.2);
+        }
+        .toast.show { transform:translateY(0); opacity:1; }
+        .toast-success { background:var(--success); }
+        .toast-danger { background:var(--danger); }
+        .toast-info { background:var(--info); }
+
+        /* ====== Badge ====== */
+        .badge {
+            display:inline-block; padding:3px 10px; border-radius:20px; font-size:.72rem;
+            font-weight:600; color:#fff; vertical-align:middle;
+        }
+        .badge-space { background:#667eea; }
+        .badge-channel { background:#4CAF50; }
+        .badge-group { background:#FF9800; }
+        .badge-other { background:#e91e63; }
+
+        /* ====== Footer ====== */
+        .footer {
+            padding:20px 40px; background:#f8f9ff; text-align:center; color:#888;
+            border-top:1px solid #eaeaea; font-size:.85rem;
+        }
+
+        /* ====== Qty Input ====== */
+        .qty-input {
+            width:70px; padding:5px 6px; border:2px solid #e0e0e0; border-radius:8px;
+            text-align:center; font-weight:700; color:var(--primary); font-size:.9rem;
+        }
+        .qty-input:focus { outline:none; border-color:var(--primary); }
+
+        /* ====== Status Filter Legend ====== */
+        .status-legend {
+            display:flex; gap:12px; flex-wrap:wrap; padding:8px 0; align-items:center;
+        }
+        .status-legend-item { display:flex; align-items:center; gap:4px; font-size:.78rem; color:#666; }
+
+        /* ====== Attendance Tab ====== */
+        .att-date-bar {
+            display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+            background:#fff; padding:16px 30px; border-bottom:1px solid #eaeaea;
+        }
+        .att-date-bar label { font-size:.9rem; font-weight:600; color:#555; white-space:nowrap; }
+        .att-date-bar input[type="date"] {
+            padding:8px 14px; border:2px solid #e0e0e0; border-radius:10px;
+            font-size:.95rem; font-weight:600; cursor:pointer;
+        }
+        .att-date-bar input[type="date"]:focus { outline:none; border-color:var(--primary); }
+        .att-summary {
+            display:flex; gap:16px; align-items:center; margin-left:auto; font-size:.88rem;
+        }
+        .att-summary .att-count { font-weight:700; color:var(--primary); font-size:1.1rem; }
+        .att-actions {
+            display:flex; gap:10px; flex-wrap:wrap; padding:12px 30px; background:#f8f9ff;
+            border-bottom:1px solid #eaeaea; align-items:center;
+        }
+        .att-grid {
+            display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));
+            gap:12px; padding:20px 30px;
+        }
+        .att-card {
+            background:#fff; border:2px solid #e8eaf6; border-radius:12px; padding:14px 16px;
+            display:flex; align-items:center; gap:12px; cursor:pointer; transition:var(--transition);
+            user-select:none;
+        }
+        .att-card:hover { border-color:var(--primary); box-shadow:0 4px 12px rgba(102,126,234,.12); }
+        .att-card.checked {
+            border-color:var(--success); background:#f0faf0;
+            box-shadow:0 4px 12px rgba(76,175,80,.12);
+        }
+        .att-card .att-checkbox {
+            width:24px; height:24px; border:2px solid #ccc; border-radius:6px;
+            display:flex; align-items:center; justify-content:center; font-size:.9rem;
+            color:#fff; transition:var(--transition); flex-shrink:0;
+        }
+        .att-card.checked .att-checkbox {
+            background:var(--success); border-color:var(--success);
+        }
+        .att-card .att-info { flex:1; min-width:0; }
+        .att-card .att-cn { font-weight:700; font-size:.95rem; color:#2c3e50; }
+        .att-card .att-en { font-size:.78rem; color:#999; }
+        .att-card .att-hours-input {
+            width:44px; padding:3px 2px; border:2px solid #a5d6a7; border-radius:6px;
+            text-align:center; font-weight:600; color:var(--success); font-size:.8rem;
+        }
+        .att-card .att-hours-input:focus { outline:none; border-color:var(--success); }
+
+        /* ====== Responsive ====== */
+        @media (max-width:768px) {
+            .header h1 { font-size:1.6rem; }
+            .controls { flex-direction:column; align-items:stretch; }
+            .search-box { max-width:100%; }
+            .person-tasks { grid-template-columns:1fr; }
+            .tab-btn { padding:10px 14px; font-size:.85rem; }
+            .calc-bar { flex-direction:column; align-items:stretch; }
+            .att-grid { grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1><i class="fas fa-tasks"></i> 通航任务分配管理系统</h1>
+    <p>导入人员名单与通航任务，灵活分配任务量级，实时跟踪团队工作进度</p>
+    <div class="stats-bar">
+        <div class="stat-box"><span class="stat-value" id="statMembers">0</span><span class="stat-label">团队成员</span></div>
+        <div class="stat-box"><span class="stat-value" id="statOnline">0</span><span class="stat-label">今日出勤</span></div>
+        <div class="stat-box"><span class="stat-value" id="statTaskTypes">0</span><span class="stat-label">通航任务</span></div>
+        <div class="stat-box"><span class="stat-value" id="statTotalQty">0</span><span class="stat-label">总分配量级</span></div>
+        <div class="stat-box"><span class="stat-value" id="statCompleted">0</span><span class="stat-label">已完成</span></div>
+    </div>
+</div>
+
+<!-- Tab Navigation -->
+<div class="tab-bar">
+    <button class="tab-btn" data-tab="attendance"><i class="fas fa-calendar-check"></i> 出勤管理</button>
+    <button class="tab-btn active" data-tab="overview"><i class="fas fa-th-large"></i> 总览视图</button>
+    <button class="tab-btn" data-tab="assignment"><i class="fas fa-user-edit"></i> 任务分配</button>
+    <button class="tab-btn" data-tab="person-view"><i class="fas fa-user"></i> 人员视图</button>
+    <button class="tab-btn" data-tab="member-manage"><i class="fas fa-users-cog"></i> 人员管理</button>
+</div>
+
+<!-- ==================== Tab 0: Attendance ==================== -->
+<div class="tab-content" id="tab-attendance">
+    <div class="att-date-bar">
+        <i class="fas fa-calendar-alt" style="color:var(--primary);font-size:1.1rem;"></i>
+        <label>选择日期：</label>
+        <input type="date" id="attDate">
+        <div class="att-summary">
+            <span>出勤：<span class="att-count" id="attCount">0</span> / <span id="attTotal">0</span> 人</span>
+        </div>
+    </div>
+    <div class="att-actions">
+        <button class="btn btn-success btn-sm" onclick="attSelectAll()"><i class="fas fa-check-double"></i> 全选</button>
+        <button class="btn btn-sm" style="background:#e0e0e0;color:#555;" onclick="attDeselectAll()"><i class="fas fa-times"></i> 全不选</button>
+        <button class="btn btn-primary btn-sm" onclick="attCopyFromPrev()"><i class="fas fa-copy"></i> 复制前一天</button>
+        <span style="font-size:.82rem;color:#999;margin-left:auto;" id="attHint">勾选上班人员并设置小时数，均分时按工时比例分配量级</span>
+    </div>
+    <div class="att-grid" id="attGrid"></div>
+</div>
+
+<!-- ==================== Tab 1: Overview ==================== -->
+<div class="tab-content active" id="tab-overview">
+    <div class="controls">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="overviewSearch" placeholder="搜索任务名称...">
+        </div>
+        <div class="action-buttons">
+            <select id="overviewCategory" class="form-select" style="width:auto;padding:9px 12px;">
+                <option value="">所有板块</option>
+            </select>
+            <select id="overviewStatus" class="form-select" style="width:auto;padding:9px 12px;">
+                <option value="">所有状态</option>
+                <option value="0">未上通航</option>
+                <option value="1">未完成，待分配</option>
+                <option value="2">已分配，待完成</option>
+                <option value="3">已完成</option>
+            </select>
+        </div>
+    </div>
+    <div class="status-legend" style="padding:0 30px 8px;">
+        <span style="font-size:.82rem;font-weight:600;color:#555;">状态说明：</span>
+        <span class="status-legend-item"><span class="status-badge status-0" style="cursor:default;"><i class="fas fa-ban"></i> 未上通航</span></span>
+        <span class="status-legend-item"><span class="status-badge status-1" style="cursor:default;"><i class="fas fa-clock"></i> 未完成，待分配</span></span>
+        <span class="status-legend-item"><span class="status-badge status-2" style="cursor:default;"><i class="fas fa-spinner"></i> 已分配，待完成</span></span>
+        <span class="status-legend-item"><span class="status-badge status-3" style="cursor:default;"><i class="fas fa-check-circle"></i> 已完成</span></span>
+    </div>
+    <div class="table-container">
+        <table id="overviewTable">
+            <thead>
+                <tr>
+                    <th style="width:6%">序号</th>
+                    <th style="width:9%">板块</th>
+                    <th style="width:16%">通航任务名称</th>
+                    <th style="width:20%">通航链接网址</th>
+                    <th style="width:6%">量级</th>
+                    <th style="width:9%">状态</th>
+                    <th style="width:24%">分配详情</th>
+                    <th style="width:10%">共分配</th>
+                </tr>
+            </thead>
+            <tbody id="overviewBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ==================== Tab 2: Assignment ==================== -->
+<div class="tab-content" id="tab-assignment">
+    <!-- Calculator bar -->
+    <div class="calc-bar">
+        <i class="fas fa-calculator" style="color:var(--primary);font-size:1.1rem;"></i>
+        <label>量级：</label>
+        <input type="number" id="calcQty" value="500" min="1" placeholder="输入量级">
+        <label>人数：</label>
+        <input type="number" id="calcPeople" value="" min="1" placeholder="输入人数">
+        <button class="btn btn-info btn-sm" onclick="calcAverage()"><i class="fas fa-divide"></i> 计算人均</button>
+        <div class="calc-result" id="calcResult">人均 = -</div>
+    </div>
+    <div class="controls">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="assignSearch" placeholder="搜索任务或人员...">
+        </div>
+        <div class="action-buttons">
+            <select id="assignCategory" class="form-select" style="width:auto;padding:9px 12px;">
+                <option value="">所有板块</option>
+            </select>
+            <select id="assignStatus" class="form-select" style="width:auto;padding:9px 12px;">
+                <option value="">所有状态</option>
+                <option value="0">未上通航</option>
+                <option value="1">未完成，待分配</option>
+                <option value="2">已分配，待完成</option>
+                <option value="3">已完成</option>
+            </select>
+            <button class="btn btn-warning" onclick="clearAllAssignments()"><i class="fas fa-eraser"></i> 清空分配</button>
+        </div>
+    </div>
+    <div class="table-container">
+        <table id="assignTable">
+            <thead>
+                <tr>
+                    <th style="width:5%">序号</th>
+                    <th style="width:8%">板块</th>
+                    <th style="width:17%">通航任务名称</th>
+                    <th style="width:10%">链接</th>
+                    <th style="width:6%">量级</th>
+                    <th style="width:8%">状态</th>
+                    <th style="width:40%">人员分配（输入量级数字，0表示不分配）</th>
+                    <th style="width:6%">操作</th>
+                </tr>
+            </thead>
+            <tbody id="assignBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ==================== Tab 3: Person View ==================== -->
+<div class="tab-content" id="tab-person-view">
+    <div class="controls">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="personSearch" placeholder="搜索人员姓名...">
+        </div>
+        <div class="action-buttons">
+            <select id="personFilter" class="form-select" style="width:auto;padding:9px 12px;">
+                <option value="">全部人员</option>
+            </select>
+            <select id="personStatusFilter" class="form-select" style="width:auto;padding:9px 12px;">
+                <option value="">所有任务状态</option>
+                <option value="2">已分配，待完成</option>
+                <option value="3">已完成</option>
+            </select>
+            <label style="display:flex;align-items:center;gap:6px;font-size:.85rem;font-weight:600;color:#555;cursor:pointer;">
+                <input type="checkbox" id="personOnlyOnline" checked> 仅显示出勤人员
+            </label>
+        </div>
+    </div>
+    <div id="personCards"></div>
+</div>
+
+<!-- ==================== Tab 4: Member Management ==================== -->
+<div class="tab-content" id="tab-member-manage">
+    <div class="import-section">
+        <i class="fas fa-file-upload"></i>
+        <p>支持导入 Excel (.xlsx) 或 CSV 格式的人员名单，包含"英文名"和"中文名"两列</p>
+        <div class="file-input-wrap">
+            <input type="file" id="importFile" accept=".xlsx,.xls,.csv">
+            <button class="btn btn-primary" onclick="handleImport()"><i class="fas fa-upload"></i> 导入名单</button>
+        </div>
+    </div>
+    <div class="controls">
+        <div style="display:flex;gap:10px;align-items:center;">
+            <button class="btn btn-success" onclick="showAddMemberModal()"><i class="fas fa-user-plus"></i> 新增人员</button>
+            <button class="btn btn-primary" onclick="exportMembers()"><i class="fas fa-download"></i> 导出名单</button>
+        </div>
+    </div>
+    <div class="table-container">
+        <table id="memberTable">
+            <thead>
+                <tr>
+                    <th style="width:8%">序号</th>
+                    <th style="width:25%">英文名</th>
+                    <th style="width:25%">中文名</th>
+                    <th style="width:22%">分配任务数</th>
+                    <th style="width:20%">操作</th>
+                </tr>
+            </thead>
+            <tbody id="memberBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ==================== Modals ==================== -->
+
+<!-- Add/Edit Member Modal -->
+<div class="modal-overlay" id="memberModal">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeModal('memberModal')">&times;</button>
+        <div class="modal-title" id="memberModalTitle">新增人员</div>
+        <input type="hidden" id="editMemberIndex" value="-1">
+        <div class="form-group">
+            <label class="form-label">英文名</label>
+            <input type="text" class="form-input" id="inputEnName" placeholder="如 leoluan">
+        </div>
+        <div class="form-group">
+            <label class="form-label">中文名</label>
+            <input type="text" class="form-input" id="inputCnName" placeholder="如 栾涛">
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeModal('memberModal')">取消</button>
+            <button class="btn btn-success" onclick="saveMember()">保存</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Task Modal -->
+<div class="modal-overlay" id="taskModal">
+    <div class="modal-box">
+        <button class="modal-close" onclick="closeModal('taskModal')">&times;</button>
+        <div class="modal-title" id="taskModalTitle">新增通航任务</div>
+        <input type="hidden" id="editTaskIndex" value="-1">
+        <div class="form-group">
+            <label class="form-label">板块</label>
+            <input type="text" class="form-input" id="inputTaskCategory" placeholder="如 空间-说说">
+        </div>
+        <div class="form-group">
+            <label class="form-label">通航任务名称</label>
+            <input type="text" class="form-input" id="inputTaskName" placeholder="如 QQ空间说说发表（带图片）">
+        </div>
+        <div class="form-group">
+            <label class="form-label">通航链接网址</label>
+            <input type="text" class="form-input" id="inputTaskLink" placeholder="https://...">
+        </div>
+        <div class="form-group">
+            <label class="form-label">通航量级</label>
+            <input type="number" class="form-input" id="inputTaskQty" placeholder="500" min="0">
+        </div>
+        <div class="form-group">
+            <label class="form-label">规则-标签管控（选填）</label>
+            <textarea class="form-textarea" id="inputTaskRule" placeholder="备注规则..."></textarea>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeModal('taskModal')">取消</button>
+            <button class="btn btn-success" onclick="saveTask()">保存</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<div class="footer">
+    <p>通航任务分配管理系统 &mdash; 数据存储在浏览器本地 (localStorage)，刷新页面数据不会丢失</p>
+</div>
+
+<script>
+// ======================== DATA ========================
+const STORAGE_KEY = 'tonghang_task_mgr_v4';
+
+const DEFAULT_TASKS = [
+    {category:"空间-说说", name:"QQ空间说说发表（带图片）", link:"https://tonghang.woa.com/v2q/space_security_review_eval/home", qty:500, rule:"【安全中心】空间业务标准带有话题的是公域", status:1},
+    {category:"", name:"QQ空间说说发表（带视频）", link:"", qty:500, rule:"", status:1},
+    {category:"", name:"QQ空间说说发表（纯文本）", link:"", qty:500, rule:"", status:1},
+    {category:"", name:"空间说说转帖", link:"", qty:500, rule:"", status:1},
+    {category:"", name:"空间公域说说动态", link:"", qty:500, rule:"", status:1},
+    {category:"空间-留言板", name:"空间留言板（星际）", link:"", qty:500, rule:"", status:1},
+    {category:"空间-日志", name:"空间日志主贴（1013转发）(100807)", link:"https://tonghang.woa.com/v2q/qzone_blog_eval/home", qty:500, rule:"", status:1},
+    {category:"空间-分享", name:"空间分享（1012转发o3）(100761)", link:"", qty:500, rule:"", status:1},
+    {category:"空间-相册", name:"空间相册上传", link:"https://tonghang.woa.com/v2q/qzone_photo_eval/home", qty:500, rule:"", status:1},
+    {category:"空间-评论", name:"空间公域评论(话题、空友爱看)", link:"https://tonghang.woa.com/v2q/qzone_comment_audit_eval/home", qty:1000, rule:"", status:1},
+    {category:"", name:"说说回复评论（有tid3才是回复）", link:"", qty:500, rule:"", status:1},
+    {category:"", name:"空间分享评论（旧版论场景1079）", link:"", qty:500, rule:"", status:1},
+    {category:"", name:"认证空间评论（及回复）", link:"", qty:500, rule:"", status:1},
+    {category:"", name:"空间日志评论(星迹1014转)", link:"", qty:500, rule:"", status:1},
+    {category:"", name:"空间相册评论", link:"", qty:500, rule:"", status:1},
+    {category:"频道", name:"频道业务帖子100818", link:"https://tonghang.woa.com/v2q/pdfeed_sec_review_eval/home", qty:300, rule:"", status:1},
+    {category:"", name:"频道-评论100919", link:"https://tonghang.woa.com/v2q/pd_comment_audit_eval/home", qty:300, rule:"", status:1},
+    {category:"", name:"消息仅文本(包含图片，一共做300数据)", link:"", qty:300, rule:"", status:1},
+    {category:"", name:"频道-资料卡", link:"https://tonghang.woa.com/v2q/pd_profile_card_eval/home", qty:300, rule:"", status:1},
+    {category:"Q群", name:"群公告相关100561", link:"https://tonghang.woa.com/v2q/group_suspect_audit/home", qty:500, rule:"有疑似风险问题，给到【标记】", status:1},
+    {category:"", name:"群管家相关100816", link:"", qty:500, rule:"", status:1},
+    {category:"", name:"常规-群消息-群大盘随机消息", link:"https://tonghang.woa.com/v2q/group_message_content_review_eval/home", qty:3000, rule:"", status:1},
+    {category:"", name:"top-群消息-群聚合消息", link:"", qty:1000, rule:"", status:1},
+    {category:"", name:"QQ群资料-大盘随机流水", link:"https://tonghang.woa.com/v2q/qqcircle_group1/home", qty:500, rule:"", status:1},
+    {category:"", name:"最近30天群禁言-TOP", link:"", qty:800, rule:"", status:0},
+    {category:"", name:"大盘整体群禁言-TOP", link:"", qty:800, rule:"", status:0},
+    {category:"", name:"7天新建群资料-TOP", link:"", qty:500, rule:"", status:0},
+    {category:"", name:"资料卡曝光-TOP", link:"", qty:500, rule:"", status:0},
+    {category:"", name:"进退群人次-TOP", link:"", qty:500, rule:"", status:0},
+    {category:"", name:"目标人群搜索主动加群-TOP", link:"", qty:500, rule:"", status:0},
+    {category:"结伴", name:"常规审计-结伴评论", link:"https://tonghang.woa.com/v2q/kuoliecomment_sec_review/home", qty:500, rule:"【风险引流-已阻断】对应标签打【风险引流】\n【风险引流-可疑】对应标签打【疑似低俗】\n【安全中心】结伴业务标准", status:1},
+    {category:"", name:"常规审计-结伴主贴", link:"https://tonghang.woa.com/v2q/kuoliecontent_sec_review/home", qty:500, rule:"", status:1},
+    {category:"", name:"Top审计-帖子TOP", link:"", qty:500, rule:"", status:1},
+    {category:"", name:"常规审计-临时会话", link:"https://tonghang.woa.com/v2q/temporary_conwersation/home", qty:500, rule:"", status:1},
+    {category:"附近", name:"常规审计-临时会话", link:"", qty:500, rule:"【风险引流】打标【风险引流】，【色情引流】打【直接色情导流】，其他色情打标【其他色情】\n【安全中心】附近业务标准", status:1},
+    {category:"", name:"常规审计-附近主贴", link:"https://tonghang.woa.com/v2q/qq_nearby/home", qty:500, rule:"", status:1},
+    {category:"", name:"常规审计-附近评论", link:"https://tonghang.woa.com/v2q/newnearby_security_audit/home", qty:500, rule:"", status:1},
+    {category:"", name:"常规审计-附近资料卡", link:"", qty:500, rule:"", status:1},
+    {category:"闪传", name:"常规审计-文件(后台随机抽样)", link:"https://tonghang.woa.com/v2q/file_upload/home", qty:500, rule:"", status:1},
+    {category:"", name:"Top审计-高热链接TOP", link:"", qty:500, rule:"", status:1},
+    {category:"AI机器人", name:"小Q", link:"暂无链接", qty:300, rule:"", status:0},
+    {category:"", name:"C项目机器人", link:"暂无链接", qty:300, rule:"", status:0},
+    {category:"", name:"AI搜索", link:"暂无链接", qty:300, rule:"", status:0},
+    {category:"", name:"脑洞秀-角色健康度", link:"https://tonghang.woa.com/v2q/qzone_ai/home", qty:300, rule:"AI微剧场内容生成生态管控标准", status:1},
+    {category:"", name:"脑洞秀--视频健康度", link:"", qty:300, rule:"", status:1},
+    {category:"", name:"智能体拨测(灯塔后台)", link:"https://beacon.woa.com/datatalk/pcg_quality_board/dashboard/260650?menuIds=menu_9zxgvw&paramsid=dd7fe11ec7b3e4ec460751888e44effd", qty:1000, rule:"", status:1},
+    {category:"QQ", name:"关键词防误杀", link:"https://tonghang.woa.com/v2q/keywords_optimization/staff/task", qty:7500, rule:"关键词防误杀-词统计", status:1}
+];
+
+const DEFAULT_MEMBERS = [
+    {en:"leoluan",cn:"栾涛"},{en:"xiaowsun",cn:"孙小雯"},{en:"shanshhao",cn:"郝姗姗"},
+    {en:"suzeeli",cn:"李晓"},{en:"pdaxingliu",cn:"刘鑫宇"},{en:"kikijiao",cn:"焦晓娜"},
+    {en:"shuaigechen",cn:"陈佳洛"},{en:"sfmi",cn:"米志华"},{en:"kimpmeng",cn:"孟鹏"},
+    {en:"luckcocoyu",cn:"于淼"},{en:"sshuangzhou",cn:"周双洋"},{en:"qianxiduan",cn:"段子晗"},
+    {en:"icebingzhao",cn:"赵冰冰"},{en:"sanyzhang",cn:"张颖"},{en:"tianyuma",cn:"马天宇"}
+];
+
+// Status definitions
+const STATUS_LIST = [
+    {value:0, label:"未上通航", icon:"fas fa-ban", cls:"status-0"},
+    {value:1, label:"未完成，待分配", icon:"fas fa-clock", cls:"status-1"},
+    {value:2, label:"已分配，待完成", icon:"fas fa-spinner", cls:"status-2"},
+    {value:3, label:"已完成", icon:"fas fa-check-circle", cls:"status-3"}
+];
+
+let state = {
+    members: [],
+    tasks: [],      // each: {category, name, link, qty, rule, status}
+    assignments: {}, // { taskIndex: { memberIndex: quantity } }
+    attendance: {}   // { "2026-05-19": [{mi:0, hours:8}, {mi:2, hours:4}, ...], ... }
+};
+
+// ======================== STATE MANAGEMENT ========================
+function loadState() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+            const saved = JSON.parse(raw);
+            if (!saved.attendance) saved.attendance = {};
+            state = saved;
+            state.tasks.forEach(t => {
+                if (t.status === undefined) t.status = 1;
+            });
+            // Migrate v3 attendance format: [mi, mi, ...] -> [{mi, hours:8}, ...]
+            for (let ds in state.attendance) {
+                const arr = state.attendance[ds];
+                if (arr.length > 0 && typeof arr[0] === 'number') {
+                    state.attendance[ds] = arr.map(mi => ({mi, hours: 8}));
+                }
+            }
+        } else {
+            // Try migrate from v2
+            const v2raw = localStorage.getItem('tonghang_task_mgr_v2');
+            if (v2raw) {
+                const v2 = JSON.parse(v2raw);
+                state.members = v2.members || [];
+                state.tasks = v2.tasks || [];
+                state.assignments = v2.assignments || {};
+                state.attendance = {};
+                state.tasks.forEach(t => { if (t.status === undefined) t.status = 1; });
+                showToast('已从 V2 迁移数据', 'info');
+            } else {
+                state.members = JSON.parse(JSON.stringify(DEFAULT_MEMBERS));
+                state.tasks = JSON.parse(JSON.stringify(DEFAULT_TASKS));
+                state.assignments = {};
+                state.attendance = {};
+            }
+        }
+    } catch(e) {
+        state.members = JSON.parse(JSON.stringify(DEFAULT_MEMBERS));
+        state.tasks = JSON.parse(JSON.stringify(DEFAULT_TASKS));
+        state.assignments = {};
+        state.attendance = {};
+    }
+}
+
+function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+// ======================== ATTENDANCE HELPERS ========================
+function getTodayStr() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function getAttendDate() { return document.getElementById('attDate').value || getTodayStr(); }
+
+// Returns [{mi, hours}, ...] in checked order
+function getOnlineList() { return state.attendance[getAttendDate()] || []; }
+// Returns [mi, ...] in checked order
+function getOnlineMemberIndices() { return getOnlineList().map(o => o.mi); }
+// Returns true if member is online today
+function isMemberOnline(mi) { return getOnlineList().some(o => o.mi === mi); }
+// Returns online count
+function getOnlineCount() { return getOnlineList().length; }
+// Get hours for a member (default 8)
+function getMemberHours(mi) {
+    const item = getOnlineList().find(o => o.mi === mi);
+    return item ? item.hours : 8;
+}
+
+function toggleAttendance(mi) {
+    const ds = getAttendDate();
+    if (!state.attendance[ds]) state.attendance[ds] = [];
+    const arr = state.attendance[ds];
+    const idx = arr.findIndex(o => o.mi === mi);
+    if (idx >= 0) arr.splice(idx, 1);
+    else arr.push({mi, hours: 8}); // append at end, preserving check order
+    saveState(); renderAttendance(); updateStats();
+}
+function attSelectAll() {
+    const all = state.members.map((_,i) => ({mi:i, hours:8}));
+    state.attendance[getAttendDate()] = all;
+    saveState(); renderAttendance(); updateStats(); showToast('已全选所有人员');
+}
+function attDeselectAll() {
+    state.attendance[getAttendDate()] = [];
+    saveState(); renderAttendance(); updateStats(); showToast('已清空出勤');
+}
+function attCopyFromPrev() {
+    const cur = getAttendDate();
+    const d = new Date(cur); d.setDate(d.getDate()-1);
+    const prev = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const pa = state.attendance[prev];
+    if (!pa || pa.length===0) { showToast('前一天无出勤记录','danger'); return; }
+    const valid = pa.filter(o => o.mi < state.members.length);
+    state.attendance[cur] = JSON.parse(JSON.stringify(valid));
+    saveState(); renderAttendance(); updateStats();
+    showToast(`已复制 ${prev} 的出勤 (${valid.length}人)`);
+}
+function attHoursChange(mi, hours) {
+    const ds = getAttendDate();
+    if (!state.attendance[ds]) return;
+    const item = state.attendance[ds].find(o => o.mi === mi);
+    if (item) { item.hours = Math.max(0.5, Math.min(24, hours)); saveState(); renderAll(); updateStats(); }
+}
+
+// ======================== UTILITY ========================
+function getCategoryForTask(idx) {
+    if (idx < 0 || idx >= state.tasks.length) return '';
+    let cat = state.tasks[idx].category;
+    if (!cat) {
+        for (let i = idx - 1; i >= 0; i--) {
+            if (state.tasks[i].category) { cat = state.tasks[i].category; break; }
+        }
+    }
+    return cat;
+}
+
+function getEffectiveLink(idx) {
+    if (idx < 0 || idx >= state.tasks.length) return '';
+    let link = state.tasks[idx].link;
+    if (!link) {
+        for (let i = idx - 1; i >= 0; i--) {
+            if (state.tasks[i].link && state.tasks[i].link !== '暂无链接') {
+                link = state.tasks[i].link; break;
+            }
+        }
+    }
+    return link || '';
+}
+
+function getCategoryBadgeClass(cat) {
+    if (!cat) return 'badge-other';
+    if (cat.includes('空间')) return 'badge-space';
+    if (cat.includes('频道')) return 'badge-channel';
+    if (cat.includes('群') || cat.includes('Q群')) return 'badge-group';
+    return 'badge-other';
+}
+
+function showToast(msg, type='success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast toast-' + type + ' show';
+    setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+function getAllCategories() {
+    const cats = new Set();
+    state.tasks.forEach(t => { if(t.category) cats.add(t.category); });
+    return [...cats];
+}
+
+function autoDetectStatus(ti) {
+    // Auto-compute status based on assignments
+    const a = state.assignments[ti] || {};
+    let hasAny = false;
+    for (let k in a) { if (a[k] > 0) { hasAny = true; break; } }
+    if (!hasAny) return 1; // 未完成，待分配
+    return 2; // 已分配，待完成
+}
+
+function getStatusBadge(status, ti) {
+    const s = STATUS_LIST[status] || STATUS_LIST[1];
+    return `<span class="status-badge ${s.cls}" onclick="showStatusPicker(event, ${ti})" title="点击切换状态"><i class="${s.icon}"></i> ${s.label}</span>`;
+}
+
+// Status picker dropdown
+function showStatusPicker(event, ti) {
+    event.stopPropagation();
+    closeStatusPicker();
+    const el = document.createElement('div');
+    el.className = 'status-select';
+    el.id = 'activeStatusPicker';
+    const rect = event.target.getBoundingClientRect();
+    el.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+    el.style.left = rect.left + 'px';
+    el.innerHTML = STATUS_LIST.map(s =>
+        `<div class="status-select-item" onclick="setStatus(${ti}, ${s.value})">
+            <i class="${s.icon}" style="color:${s.value===0?'#999':s.value===1?'#e65100':s.value===2?'#1565c0':'#2e7d32'}"></i>
+            ${s.label}
+        </div>`
+    ).join('');
+    document.body.appendChild(el);
+    // Close on outside click
+    setTimeout(() => document.addEventListener('click', closeStatusPicker, {once:true}), 0);
+}
+
+function closeStatusPicker() {
+    const el = document.getElementById('activeStatusPicker');
+    if (el) el.remove();
+}
+
+function setStatus(ti, status) {
+    state.tasks[ti].status = status;
+    saveState();
+    renderAll();
+    updateStats();
+    showToast('状态已更新');
+}
+
+// ======================== CALCULATOR ========================
+function calcAverage() {
+    const qty = parseInt(document.getElementById('calcQty').value) || 0;
+    const people = parseInt(document.getElementById('calcPeople').value) || 0;
+    if (qty <= 0 || people <= 0) {
+        document.getElementById('calcResult').textContent = '请输入有效的量级和人数';
+        document.getElementById('calcResult').style.background = '#e74c3c';
+        return;
+    }
+    const avg = Math.floor(qty / people);
+    const remainder = qty - avg * people;
+    let detail = '';
+    if (remainder > 0) {
+        detail = ` (${avg} x ${people}人 + 余${remainder})`;
+    }
+    document.getElementById('calcResult').textContent = `人均 = ${avg}${detail}`;
+    document.getElementById('calcResult').style.background = 'linear-gradient(135deg,#667eea,#764ba2)';
+}
+
+// Per-task equal distribute — proportionally by working hours among online members
+function equalDistributeTask(ti) {
+    const onlineList = getOnlineList();
+    if (onlineList.length === 0) {
+        showToast('请先在"出勤管理"勾选今日上班人员', 'danger');
+        return;
+    }
+    const qty = state.tasks[ti].qty;
+    if (!state.assignments[ti]) state.assignments[ti] = {};
+    state.assignments[ti] = {};
+    // Calculate total hours
+    const totalHours = onlineList.reduce((s, o) => s + o.hours, 0);
+    if (totalHours <= 0) return;
+    // Distribute proportionally by hours
+    let remaining = qty;
+    onlineList.forEach((o, idx) => {
+        if (idx === onlineList.length - 1) {
+            // Last person gets remainder
+            state.assignments[ti][o.mi] = Math.max(0, remaining);
+        } else {
+            const share = Math.round(qty * o.hours / totalHours);
+            state.assignments[ti][o.mi] = share;
+            remaining -= share;
+        }
+    });
+    if (state.tasks[ti].status === 1) state.tasks[ti].status = 2;
+    saveState();
+    renderAll();
+    updateStats();
+    const detail = onlineList.map(o => `${state.members[o.mi].cn}:${o.hours}h=${state.assignments[ti][o.mi]}`).join(', ');
+    showToast(`已按工时比例分配 (${totalHours}总小时)`);
+}
+
+// ======================== STATS ========================
+function updateStats() {
+    document.getElementById('statMembers').textContent = state.members.length;
+    document.getElementById('statOnline').textContent = getOnlineCount();
+    document.getElementById('statTaskTypes').textContent = state.tasks.length;
+    let totalQty = 0;
+    state.members.forEach((_, mi) => {
+        state.tasks.forEach((_, ti) => {
+            const a = state.assignments[ti];
+            if (a && a[mi]) totalQty += (a[mi] || 0);
+        });
+    });
+    document.getElementById('statTotalQty').textContent = totalQty.toLocaleString();
+    let completed = 0;
+    state.tasks.forEach(t => { if (t.status === 3) completed++; });
+    document.getElementById('statCompleted').textContent = completed;
+}
+
+// ======================== TAB SWITCH ========================
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+        if (btn.dataset.tab === 'attendance') renderAttendance();
+        if (btn.dataset.tab === 'assignment') renderAssignment();
+        if (btn.dataset.tab === 'person-view') renderPersonView();
+    });
+});
+
+// ======================== ATTENDANCE TAB ========================
+function renderAttendance() {
+    const dateStr = getAttendDate();
+    const onlineList = state.attendance[dateStr] || []; // [{mi, hours}, ...]
+    const onlineMiSet = new Set(onlineList.map(o => o.mi));
+    const grid = document.getElementById('attGrid');
+    grid.innerHTML = '';
+    if (state.members.length === 0) {
+        grid.innerHTML = '<div class="no-data-msg"><i class="fas fa-user-plus" style="font-size:2rem;margin-bottom:10px;display:block;"></i>暂无人员，请先在"人员管理"添加</div>';
+        document.getElementById('attCount').textContent = '0';
+        document.getElementById('attTotal').textContent = '0';
+        return;
+    }
+    // Render checked members first (in check order), then unchecked
+    const renderOrder = [];
+    onlineList.forEach(o => { if (o.mi < state.members.length) renderOrder.push({mi: o.mi, hours: o.hours, checked: true}); });
+    state.members.forEach((m, mi) => {
+        if (!onlineMiSet.has(mi)) renderOrder.push({mi, hours: 8, checked: false});
+    });
+
+    renderOrder.forEach(item => {
+        const m = state.members[item.mi];
+        const card = document.createElement('div');
+        card.className = 'att-card' + (item.checked ? ' checked' : '');
+        if (item.checked) {
+            card.innerHTML = `
+                <div class="att-checkbox" onclick="event.stopPropagation();toggleAttendance(${item.mi})"><i class="fas fa-check"></i></div>
+                <div class="att-info" onclick="event.stopPropagation();toggleAttendance(${item.mi})">
+                    <div class="att-cn">${m.cn}</div>
+                    <div class="att-en">${m.en}</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:3px;flex-shrink:0;" onclick="event.stopPropagation()">
+                    <span style="font-size:.72rem;color:#888;white-space:nowrap;"><i class="fas fa-clock"></i></span>
+                    <input type="number" class="qty-input" style="width:44px;padding:3px 2px;font-size:.8rem;border-color:#a5d6a7;" value="${item.hours}" min="0.5" max="24" step="0.5" onchange="attHoursChange(${item.mi}, parseFloat(this.value)||8)" title="上班小时数，默认8小时">
+                    <span style="font-size:.68rem;color:#888;">h</span>
+                </div>`;
+        } else {
+            card.onclick = () => toggleAttendance(item.mi);
+            card.innerHTML = `
+                <div class="att-checkbox"></div>
+                <div class="att-info">
+                    <div class="att-cn">${m.cn}</div>
+                    <div class="att-en">${m.en}</div>
+                </div>
+                <div style="flex-shrink:0;width:65px;"></div>`;
+        }
+        grid.appendChild(card);
+    });
+
+    document.getElementById('attCount').textContent = onlineList.length;
+    document.getElementById('attTotal').textContent = state.members.length;
+}
+document.getElementById('attDate').addEventListener('change', () => { renderAttendance(); updateStats(); });
+
+// ======================== OVERVIEW TAB ========================
+function renderOverview() {
+    const catSel = document.getElementById('overviewCategory');
+    const staSel = document.getElementById('overviewStatus');
+    const perSel = document.getElementById('overviewPerson');
+    const oldCat = catSel.value;
+    const oldSta = staSel.value;
+    const oldPer = perSel ? perSel.value : '';
+    catSel.innerHTML = '<option value="">所有板块</option>';
+    getAllCategories().forEach(c => { catSel.innerHTML += `<option value="${c}">${c}</option>`; });
+    catSel.value = oldCat;
+    staSel.value = oldSta;
+
+    const search = document.getElementById('overviewSearch').value.toLowerCase();
+    const selCat = catSel.value;
+    const selSta = staSel.value;
+
+    const body = document.getElementById('overviewBody');
+    body.innerHTML = '';
+
+    state.tasks.forEach((task, ti) => {
+        const cat = getCategoryForTask(ti);
+        const link = getEffectiveLink(ti);
+        if (selCat && cat !== selCat) return;
+        if (selSta !== '' && task.status !== parseInt(selSta)) return;
+        if (search && !task.name.toLowerCase().includes(search) && !cat.toLowerCase().includes(search)) return;
+
+        const a = state.assignments[ti] || {};
+        let assignedMembers = [];
+        let onlineAssignedSum = 0;
+        const oli = getOnlineMemberIndices();
+        state.members.forEach((m, mi) => {
+            if (a[mi] && a[mi] > 0) {
+                assignedMembers.push({name: m.cn, qty: a[mi], online: isMemberOnline(mi)});
+                if (isMemberOnline(mi)) onlineAssignedSum += a[mi];
+            }
+        });
+
+        const tr = document.createElement('tr');
+        const displayCat = task.category || cat;
+        const truncatedLink = link ? (link.length > 40 ? link.substring(0,40) + '...' : link) : '-';
+
+        let assignHtml = assignedMembers.length
+            ? assignedMembers.map(x => `<span style="margin-right:8px;${x.online?'':'color:#bbb;'}"><b>${x.name}</b>: ${x.qty}${x.online?'':' <span style="font-size:.68rem;color:#e74c3c;">[离线]</span>'}</span>`).join('')
+            : '<span style="color:#bbb;">未分配</span>';
+
+        tr.innerHTML = `
+            <td>${ti+1}</td>
+            <td>${displayCat ? `<span class="badge ${getCategoryBadgeClass(displayCat)}">${displayCat}</span>` : '-'}</td>
+            <td style="font-weight:600;">${task.name}</td>
+            <td style="font-size:.8rem;color:#666;">${link ? `<a href="${link}" target="_blank" title="${link}" style="color:#3498db;text-decoration:none;">${truncatedLink}</a>` : '-'}</td>
+            <td style="font-weight:700;color:var(--primary);">${task.qty}</td>
+            <td>${getStatusBadge(task.status, ti)}</td>
+            <td style="font-size:.82rem;">${assignHtml}</td>
+            <td style="text-align:center;font-weight:700;color:var(--primary);font-size:.9rem;"><b>${onlineAssignedSum}</b><span style="font-weight:400;color:#aaa;font-size:.75rem;"> / ${task.qty}</span></td>
+        `;
+        body.appendChild(tr);
+    });
+}
+
+document.getElementById('overviewSearch').addEventListener('input', renderOverview);
+document.getElementById('overviewCategory').addEventListener('change', renderOverview);
+document.getElementById('overviewStatus').addEventListener('change', renderOverview);
+
+// ======================== ASSIGNMENT TAB ========================
+function renderAssignment() {
+    const catSel = document.getElementById('assignCategory');
+    const staSel = document.getElementById('assignStatus');
+    const oldCat = catSel.value;
+    const oldSta = staSel.value;
+    catSel.innerHTML = '<option value="">所有板块</option>';
+    getAllCategories().forEach(c => { catSel.innerHTML += `<option value="${c}">${c}</option>`; });
+    catSel.value = oldCat;
+    staSel.value = oldSta;
+
+    // Update calculator default people count to online count
+    const calcPeople = document.getElementById('calcPeople');
+    const onlineCount = getOnlineCount();
+    if (!calcPeople.value || parseInt(calcPeople.value) === state.members.length) {
+        calcPeople.value = onlineCount > 0 ? onlineCount : state.members.length;
+    }
+
+    const search = document.getElementById('assignSearch').value.toLowerCase();
+    const selCat = catSel.value;
+    const selSta = staSel.value;
+    const body = document.getElementById('assignBody');
+    body.innerHTML = '';
+
+    const onlineIndices = getOnlineMemberIndices();
+    const showAll = onlineIndices.length === 0;
+
+    // Build ordered member list: online first (in check order), then offline
+    const orderedMembers = [];
+    if (showAll) {
+        state.members.forEach((m, mi) => orderedMembers.push({mi, isOnline: true}));
+    } else {
+        onlineIndices.forEach(mi => orderedMembers.push({mi, isOnline: true}));
+        state.members.forEach((m, mi) => {
+            if (!onlineIndices.includes(mi)) orderedMembers.push({mi, isOnline: false});
+        });
+    }
+
+    // Warning banner if no one is online
+    if (onlineIndices.length === 0 && state.members.length > 0) {
+        const warnTr = document.createElement('tr');
+        warnTr.innerHTML = `<td colspan="8" style="background:#fff3e0;padding:10px 16px;text-align:center;color:#e65100;font-size:.88rem;">
+            <i class="fas fa-exclamation-triangle"></i> 今日未勾选出勤人员，当前显示全部成员。请前往"出勤管理"勾选当日上班人员以启用精准分配。
+        </td>`;
+        body.appendChild(warnTr);
+    }
+
+    state.tasks.forEach((task, ti) => {
+        const cat = getCategoryForTask(ti);
+        const link = getEffectiveLink(ti);
+        if (selCat && cat !== selCat) return;
+        if (selSta !== '' && task.status !== parseInt(selSta)) return;
+        if (search && !task.name.toLowerCase().includes(search) && !cat.toLowerCase().includes(search)) return;
+
+        const a = state.assignments[ti] || {};
+        const tr = document.createElement('tr');
+        const displayCat = task.category || cat;
+
+        let memberInputs = '<div style="display:flex;flex-wrap:wrap;gap:5px;align-items:center;">';
+        orderedMembers.forEach(({mi, isOnline}) => {
+            const m = state.members[mi];
+            const val = a[mi] || 0;
+            const opacity = isOnline ? '1' : '0.35';
+            const bgStyle = isOnline ? 'background:#f8f9ff;border:1px solid #e8eaf6;' : 'background:#f5f5f5;border:1px solid #e0e0e0;';
+            const hours = isOnline ? getMemberHours(mi) : 0;
+            const hoursLabel = isOnline && hours !== 8 ? `<span style="font-size:.64rem;color:var(--warning);font-weight:400;">${hours}h</span>` : '';
+            memberInputs += `
+                <div style="display:flex;align-items:center;gap:2px;padding:3px 6px;border-radius:8px;opacity:${opacity};${bgStyle}">
+                    <span style="font-size:.74rem;font-weight:600;color:#555;white-space:nowrap;">${m.cn}${hoursLabel ? ' ':''}</span>${hoursLabel}
+                    <input type="number" class="qty-input" style="width:56px;padding:3px 4px;font-size:.82rem;" value="${val}" min="0" data-ti="${ti}" data-mi="${mi}" onchange="onQtyChange(this)" ${isOnline?'':'disabled'}>
+                </div>
+            `;
+        });
+        memberInputs += '</div>';
+
+        const linkShort = link ? (link.length > 22 ? link.substring(0,22)+'...' : link) : '-';
+        const hasLink = link ? 'color:var(--info);cursor:pointer;' : 'color:#bbb;';
+
+        // Compute assigned sum for online members only
+        let assignedSum = 0;
+        onlineIndices.forEach(mi => { assignedSum += (a[mi] || 0); });
+
+        tr.innerHTML = `
+            <td>${ti+1}</td>
+            <td>${displayCat ? `<span class="badge ${getCategoryBadgeClass(displayCat)}" style="font-size:.68rem;">${displayCat}</span>` : '-'}</td>
+            <td style="font-weight:600;font-size:.85rem;">${task.name}</td>
+            <td style="font-size:.74rem;${hasLink}" ${link ? `onclick="window.open('${link}','_blank')"` : ''}>${link ? linkShort : '-'}</td>
+            <td style="font-weight:700;color:var(--primary);text-align:center;">${task.qty}</td>
+            <td>${getStatusBadge(task.status, ti)}</td>
+            <td>${memberInputs}</td>
+            <td style="text-align:center;white-space:nowrap;">
+                <button class="btn btn-eq btn-xs" onclick="equalDistributeTask(${ti})" title="按工时比例均分给今日出勤人员"><i class="fas fa-balance-scale"></i> 均分</button>
+                <span id="asum-${ti}" style="font-size:.72rem;color:#888;display:block;margin-top:3px;">已分:<b style="color:var(--primary);">${assignedSum}</b>/${task.qty}</span>
+            </td>
+        `;
+        body.appendChild(tr);
+    });
+
+    const addTr = document.createElement('tr');
+    addTr.innerHTML = `<td colspan="8" style="text-align:center;padding:14px;">
+        <button class="btn btn-success btn-sm" onclick="showAddTaskModal()"><i class="fas fa-plus"></i> 新增通航任务</button>
+    </td>`;
+    body.appendChild(addTr);
+}
+
+function onQtyChange(input) {
+    const ti = parseInt(input.dataset.ti);
+    const mi = parseInt(input.dataset.mi);
+    const val = parseInt(input.value) || 0;
+    if (!state.assignments[ti]) state.assignments[ti] = {};
+    if (val > 0) {
+        state.assignments[ti][mi] = val;
+        if (state.tasks[ti].status === 1) state.tasks[ti].status = 2;
+    } else {
+        delete state.assignments[ti][mi];
+        let hasAny = false;
+        for (let k in state.assignments[ti]) { if (state.assignments[ti][k] > 0) { hasAny = true; break; } }
+        if (!hasAny && state.tasks[ti].status === 2) state.tasks[ti].status = 1;
+    }
+    saveState();
+    updateStats();
+    // Real-time update "已分" badge for this row (sum of online members only)
+    const oli = getOnlineMemberIndices();
+    const a = state.assignments[ti] || {};
+    let sum = 0;
+    oli.forEach(omi => { sum += (a[omi] || 0); });
+    const el = document.getElementById('asum-' + ti);
+    if (el) el.innerHTML = `已分:<b style="color:var(--primary);">${sum}</b>/${state.tasks[ti].qty}`;
+}
+
+function clearAllAssignments() {
+    if (!confirm('确定清空所有分配数据？')) return;
+    state.assignments = {};
+    state.tasks.forEach(t => {
+        if (t.status === 2) t.status = 1;
+    });
+    saveState();
+    renderAll();
+    updateStats();
+    showToast('已清空所有分配', 'info');
+}
+
+document.getElementById('assignSearch').addEventListener('input', renderAssignment);
+document.getElementById('assignCategory').addEventListener('change', renderAssignment);
+document.getElementById('assignStatus').addEventListener('change', renderAssignment);
+
+// ======================== PERSON VIEW TAB ========================
+function renderPersonView() {
+    const perSel = document.getElementById('personFilter');
+    const staSel = document.getElementById('personStatusFilter');
+    const onlyOnline = document.getElementById('personOnlyOnline').checked;
+    const oldPer = perSel.value;
+    const oldSta = staSel.value;
+    perSel.innerHTML = '<option value="">全部人员</option>';
+    state.members.forEach(m => { perSel.innerHTML += `<option value="${m.cn}">${m.cn}</option>`; });
+    perSel.value = oldPer;
+    staSel.value = oldSta;
+
+    const onlineIndices = getOnlineMemberIndices();
+
+    const search = document.getElementById('personSearch').value.toLowerCase();
+    const selPer = perSel.value;
+    const selSta = staSel.value ? parseInt(staSel.value) : null;
+    const container = document.getElementById('personCards');
+    container.innerHTML = '';
+
+    // Build ordered member list for person view
+    let orderedMemberList = [];
+    if (onlyOnline && onlineIndices.length > 0) {
+        onlineIndices.forEach(mi => orderedMemberList.push(mi));
+    } else {
+        // Online first in check order, then offline
+        onlineIndices.forEach(mi => orderedMemberList.push(mi));
+        state.members.forEach((_, mi) => { if (!onlineIndices.includes(mi)) orderedMemberList.push(mi); });
+    }
+
+    let hasData = false;
+    orderedMemberList.forEach((mi) => {
+        const member = state.members[mi];
+        if (!member) return;
+        if (onlyOnline && onlineIndices.length > 0 && !onlineIndices.includes(mi)) return;
+        if (selPer && member.cn !== selPer) return;
+        if (search && !member.cn.toLowerCase().includes(search) && !member.en.toLowerCase().includes(search)) return;
+
+        let assignedTasks = [];
+        state.tasks.forEach((task, ti) => {
+            const a = state.assignments[ti] || {};
+            if (a[mi] && a[mi] > 0) {
+                if (selSta !== null && task.status !== selSta) return;
+                assignedTasks.push({
+                    index: ti,
+                    name: task.name,
+                    category: getCategoryForTask(ti),
+                    link: getEffectiveLink(ti),
+                    qty: a[mi],
+                    status: task.status
+                });
+            }
+        });
+
+        const totalQty = assignedTasks.reduce((s, t) => s + t.qty, 0);
+        if (!assignedTasks.length && selPer) return;
+        hasData = true;
+
+        const card = document.createElement('div');
+        card.className = 'person-card';
+        const isOnline = onlineIndices.length === 0 || onlineIndices.includes(mi);
+        const hours = isOnline ? getMemberHours(mi) : 0;
+        const onlineBadge = isOnline
+            ? `<span class="badge" style="background:#4CAF50;font-size:.68rem;margin-left:8px;">出勤${hours!==8?' '+hours+'h':''}</span>`
+            : '<span class="badge" style="background:#e0e0e0;color:#999;font-size:.68rem;margin-left:8px;">离线</span>';
+
+        let tasksHtml = assignedTasks.length ? assignedTasks.map(t => {
+            const linkHtml = t.link ? `<a href="${t.link}" target="_blank" title="${t.link}">${t.link.length > 42 ? t.link.substring(0,42)+'...' : t.link}</a>` : '无链接';
+            const s = STATUS_LIST[t.status] || STATUS_LIST[1];
+            return `
+                <div class="task-card">
+                    <div class="task-info">
+                        <div class="task-name-text">
+                            ${t.category ? `<span class="badge ${getCategoryBadgeClass(t.category)}" style="font-size:.68rem;margin-right:4px;">${t.category}</span>` : ''}
+                            ${t.name}
+                        </div>
+                        <div class="task-link">${linkHtml}</div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;margin-left:10px;">
+                        <span class="status-badge ${s.cls}" style="cursor:default;font-size:.7rem;padding:2px 8px;"><i class="${s.icon}"></i> ${s.label}</span>
+                        <div class="task-qty" style="margin:0;">${t.qty}</div>
+                    </div>
+                </div>
+            `;
+        }).join('') : '<div style="color:#aaa;padding:20px;text-align:center;grid-column:1/-1;">暂无分配任务</div>';
+
+        card.innerHTML = `
+            <div class="person-header">
+                <div>
+                    <span class="person-name"><i class="fas fa-user-circle" style="color:var(--primary);margin-right:6px;"></i>${member.cn}</span>${onlineBadge}
+                    <span style="color:#999;font-size:.85rem;margin-left:8px;">${member.en}</span>
+                </div>
+                <div>
+                    <span style="color:#888;font-size:.85rem;margin-right:12px;">${assignedTasks.length} 项任务</span>
+                    <span class="person-total">合计: ${totalQty.toLocaleString()}</span>
+                </div>
+            </div>
+            <div class="progress-wrap"><div class="progress-fill" style="width:${Math.min(100, (totalQty / 5000) * 100)}%"></div></div>
+            <div style="margin-top:14px;" class="person-tasks">${tasksHtml}</div>
+        `;
+        container.appendChild(card);
+    });
+
+    if (!hasData) {
+        container.innerHTML = '<div class="no-data-msg"><i class="fas fa-inbox" style="font-size:3rem;margin-bottom:12px;display:block;"></i>暂无数据，请先分配任务</div>';
+    }
+}
+
+document.getElementById('personSearch').addEventListener('input', renderPersonView);
+document.getElementById('personFilter').addEventListener('change', renderPersonView);
+document.getElementById('personStatusFilter').addEventListener('change', renderPersonView);
+document.getElementById('personOnlyOnline').addEventListener('change', renderPersonView);
+
+// ======================== MEMBER MANAGEMENT ========================
+function renderMembers() {
+    const body = document.getElementById('memberBody');
+    body.innerHTML = '';
+    state.members.forEach((m, i) => {
+        let taskCount = 0;
+        state.tasks.forEach((_, ti) => {
+            const a = state.assignments[ti];
+            if (a && a[i] && a[i] > 0) taskCount++;
+        });
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${i+1}</td>
+            <td>${m.en}</td>
+            <td style="font-weight:600;">${m.cn}</td>
+            <td>${taskCount} 项</td>
+            <td>
+                <button class="btn-icon btn-edit" onclick="showEditMemberModal(${i})" title="编辑"><i class="fas fa-edit"></i></button>
+                <button class="btn-icon btn-del" onclick="deleteMember(${i})" title="删除"><i class="fas fa-trash"></i></button>
+            </td>
+        `;
+        body.appendChild(tr);
+    });
+}
+
+function showAddMemberModal() {
+    document.getElementById('memberModalTitle').textContent = '新增人员';
+    document.getElementById('editMemberIndex').value = -1;
+    document.getElementById('inputEnName').value = '';
+    document.getElementById('inputCnName').value = '';
+    openModal('memberModal');
+}
+
+function showEditMemberModal(idx) {
+    document.getElementById('memberModalTitle').textContent = '编辑人员';
+    document.getElementById('editMemberIndex').value = idx;
+    document.getElementById('inputEnName').value = state.members[idx].en;
+    document.getElementById('inputCnName').value = state.members[idx].cn;
+    openModal('memberModal');
+}
+
+function saveMember() {
+    const idx = parseInt(document.getElementById('editMemberIndex').value);
+    const en = document.getElementById('inputEnName').value.trim();
+    const cn = document.getElementById('inputCnName').value.trim();
+    if (!cn) { showToast('中文名不能为空', 'danger'); return; }
+    if (idx >= 0) {
+        state.members[idx] = {en, cn};
+        showToast('人员已更新');
+    } else {
+        state.members.push({en, cn});
+        showToast('人员已添加');
+    }
+    saveState();
+    renderAll();
+    updateStats();
+    renderAttendance();
+    closeModal('memberModal');
+}
+
+function deleteMember(idx) {
+    if (!confirm(`确定删除"${state.members[idx].cn}"？该人员的分配数据将同时清除。`)) return;
+    const cn = state.members[idx].cn;
+    state.members.splice(idx, 1);
+    for (let ti in state.assignments) {
+        const a = state.assignments[ti];
+        delete a[idx];
+        const newA = {};
+        for (let k in a) {
+            const ki = parseInt(k);
+            newA[ki > idx ? ki - 1 : ki] = a[k];
+        }
+        state.assignments[ti] = newA;
+    }
+    // Also fix attendance indices
+    for (let dateStr in state.attendance) {
+        state.attendance[dateStr] = state.attendance[dateStr]
+            .filter(o => o.mi !== idx)
+            .map(o => ({mi: o.mi > idx ? o.mi - 1 : o.mi, hours: o.hours}));
+    }
+    saveState();
+    renderAll();
+    updateStats();
+    renderAttendance();
+    showToast(`已删除 ${cn}`, 'info');
+}
+
+// ======================== TASK MODAL ========================
+function showAddTaskModal() {
+    document.getElementById('taskModalTitle').textContent = '新增通航任务';
+    document.getElementById('editTaskIndex').value = -1;
+    document.getElementById('inputTaskCategory').value = '';
+    document.getElementById('inputTaskName').value = '';
+    document.getElementById('inputTaskLink').value = '';
+    document.getElementById('inputTaskQty').value = '500';
+    document.getElementById('inputTaskRule').value = '';
+    openModal('taskModal');
+}
+
+function showEditTaskModal(idx) {
+    const task = state.tasks[idx];
+    document.getElementById('taskModalTitle').textContent = '编辑通航任务';
+    document.getElementById('editTaskIndex').value = idx;
+    document.getElementById('inputTaskCategory').value = task.category || '';
+    document.getElementById('inputTaskName').value = task.name;
+    document.getElementById('inputTaskLink').value = task.link || '';
+    document.getElementById('inputTaskQty').value = task.qty;
+    document.getElementById('inputTaskRule').value = task.rule || '';
+    openModal('taskModal');
+}
+
+function saveTask() {
+    const idx = parseInt(document.getElementById('editTaskIndex').value);
+    const task = {
+        category: document.getElementById('inputTaskCategory').value.trim(),
+        name: document.getElementById('inputTaskName').value.trim(),
+        link: document.getElementById('inputTaskLink').value.trim(),
+        qty: parseInt(document.getElementById('inputTaskQty').value) || 0,
+        rule: document.getElementById('inputTaskRule').value.trim(),
+        status: idx >= 0 ? state.tasks[idx].status : 1
+    };
+    if (!task.name) { showToast('任务名称不能为空', 'danger'); return; }
+    if (idx >= 0) {
+        state.tasks[idx] = task;
+        showToast('任务已更新');
+    } else {
+        state.tasks.push(task);
+        showToast('任务已添加');
+    }
+    saveState();
+    renderAll();
+    updateStats();
+    closeModal('taskModal');
+}
+
+function deleteTask(idx) {
+    if (!confirm(`确定删除"${state.tasks[idx].name}"？`)) return;
+    state.tasks.splice(idx, 1);
+    const newAssignments = {};
+    for (let ti in state.assignments) {
+        const tiNum = parseInt(ti);
+        if (tiNum === idx) continue;
+        newAssignments[tiNum > idx ? tiNum - 1 : tiNum] = state.assignments[ti];
+    }
+    state.assignments = newAssignments;
+    saveState();
+    renderAll();
+    updateStats();
+    showToast('任务已删除', 'info');
+}
+
+// ======================== IMPORT / EXPORT ========================
+function handleImport() {
+    const fileInput = document.getElementById('importFile');
+    if (!fileInput.files.length) { showToast('请选择文件', 'danger'); return; }
+    const file = fileInput.files[0];
+    const ext = file.name.split('.').pop().toLowerCase();
+
+    if (ext === 'csv') {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const lines = e.target.result.split('\n');
+            let count = 0;
+            lines.forEach(line => {
+                const parts = line.split(',').map(s => s.trim().replace(/^"|"$/g, ''));
+                if (parts.length >= 2 && parts[0] && parts[1] && parts[0] !== '英文名') {
+                    state.members.push({en: parts[0], cn: parts[1]});
+                    count++;
+                }
+            });
+            saveState(); renderMembers(); updateStats(); renderAttendance();
+            showToast(`成功导入 ${count} 位人员`);
+            fileInput.value = '';
+        };
+        reader.readAsText(file, 'utf-8');
+    } else {
+        showToast('正在解析 Excel...', 'info');
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+        script.onload = function() {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const wb = XLSX.read(e.target.result, {type:'array'});
+                    const ws = wb.Sheets[wb.SheetNames[0]];
+                    const data = XLSX.utils.sheet_to_json(ws, {header:1});
+                    let count = 0;
+                    data.forEach(row => {
+                        if (row.length >= 2 && row[0] && row[1] && row[0] !== '英文名') {
+                            state.members.push({en: String(row[0]), cn: String(row[1])});
+                            count++;
+                        }
+                    });
+                    saveState(); renderMembers(); updateStats(); renderAttendance();
+                    showToast(`成功导入 ${count} 位人员`);
+                } catch(err) {
+                    showToast('文件解析失败: ' + err.message, 'danger');
+                }
+                fileInput.value = '';
+            };
+            reader.readAsArrayBuffer(file);
+        };
+        script.onerror = function() { showToast('加载 Excel 解析库失败', 'danger'); };
+        document.head.appendChild(script);
+    }
+}
+
+function exportMembers() {
+    let csv = '\uFEFF英文名,中文名\n';
+    state.members.forEach(m => { csv += `${m.en},${m.cn}\n`; });
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `人员名单_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    showToast('名单已导出');
+}
+
+// ======================== RENDER ALL ========================
+function renderAll() {
+    renderAttendance();
+    renderOverview();
+    renderAssignment();
+    renderPersonView();
+    renderMembers();
+}
+
+// ======================== INIT ========================
+document.getElementById('attDate').value = getTodayStr();
+loadState();
+updateStats();
+renderAll();
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', e => {
+        if (e.target === overlay) overlay.classList.remove('show');
+    });
+});
+</script>
+</body>
+</html>
