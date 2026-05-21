@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>团队绩效扣罚管理制度</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    :root {
+        --primary: #667eea;
+        --primary-dark: #5a6fd6;
+        --secondary: #764ba2;
+        --success: #4CAF50;
+        --warning: #FF9800;
+        --danger: #e74c3c;
+        --info: #3498db;
+        --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        --card-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        --header-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --border-radius: 16px;
+        --transition: all 0.3s ease;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI','Microsoft YaHei','PingFang SC',sans-serif; }
+    body { background: var(--bg-gradient); min-height:100vh; color:#333; line-height:1.7; }
+
+    .header {
+        background: var(--header-gradient); color:#fff; padding:32px 40px; text-align:center;
+        box-shadow: 0 4px 20px rgba(102,126,234,.25);
+    }
+    .header h1 { font-size:2.2rem; margin-bottom:6px; text-shadow: 0 2px 8px rgba(0,0,0,.15); }
+    .header .subtitle { font-size:1rem; opacity:.92; max-width:700px; margin:0 auto 18px; }
+    .stats-bar { display:flex; justify-content:center; gap:20px; margin-top:16px; flex-wrap:wrap; }
+    .stat-box {
+        background:rgba(255,255,255,.18); border-radius:14px; padding:14px 24px;
+        text-align:center; min-width:120px; backdrop-filter:blur(12px);
+        border:1px solid rgba(255,255,255,.15); transition: transform .2s, box-shadow .2s;
+    }
+    .stat-box:hover { transform:translateY(-3px); box-shadow:0 8px 20px rgba(0,0,0,.15); }
+    .stat-value { font-size:1.8rem; font-weight:700; display:block; }
+    .stat-label { font-size:.85rem; opacity:.9; }
+
+    .tab-bar {
+        display:flex; background:#fff; border-bottom:2px solid #eaeaea;
+        padding:0 30px; overflow-x:auto;
+        box-shadow: 0 2px 8px rgba(0,0,0,.04);
+        position: sticky; top: 0; z-index: 100;
+    }
+    .tab-btn {
+        padding:14px 24px; border:none; background:none; font-size:.95rem; font-weight:600;
+        color:#888; cursor:pointer; border-bottom:3px solid transparent;
+        transition: color .25s, border-color .25s, background .25s;
+        display:flex; align-items:center; gap:8px; white-space:nowrap;
+        border-radius: 8px 8px 0 0;
+    }
+    .tab-btn:hover { color:var(--primary); background:#f8f9ff; }
+    .tab-btn.active { color:var(--primary); border-bottom-color:var(--primary); background:#f0f4ff; }
+    .tab-content { display:none; }
+    .tab-content.active { display:block; }
+
+    .controls {
+        padding:18px 30px; background:#f8f9ff; display:flex; justify-content:space-between;
+        align-items:center; flex-wrap:wrap; gap:12px; border-bottom:1px solid #eaeaea;
+    }
+    .search-box { position:relative; flex-grow:1; max-width:340px; }
+    .search-box input {
+        width:100%; padding:10px 16px 10px 42px; border:2px solid #e0e0e0;
+        border-radius:10px; font-size:.95rem; transition:var(--transition);
+    }
+    .search-box input:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(102,126,234,.2); }
+    .search-box i { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#888; }
+
+    .btn {
+        padding:9px 18px; border:none; border-radius:10px; font-size:.9rem; font-weight:600;
+        cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:var(--transition);
+    }
+    .btn:hover { transform:translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.12); }
+    .btn:active { transform:translateY(0); }
+    .btn-primary { background:var(--header-gradient); color:#fff; }
+    .btn-info { background:var(--info); color:#fff; }
+
+    table { width:100%; border-collapse:collapse; border-radius:14px; overflow:hidden; box-shadow:0 4px 16px rgba(0,0,0,.06); }
+    thead { background:var(--header-gradient); color:#fff; }
+    thead th { text-shadow: 0 1px 3px rgba(0,0,0,.15); }
+    th { padding:13px 10px; text-align:left; font-weight:600; font-size:.88rem; white-space:nowrap; }
+    tbody tr { border-bottom:1px solid #f0f0f0; transition:background .2s; }
+    tbody tr:hover { background:#f0f3ff; }
+    tbody tr:nth-child(even) { background:#fafbff; }
+    tbody tr:nth-child(even):hover { background:#f0f3ff; }
+    td { padding:11px 10px; vertical-align:middle; font-size:.88rem; }
+
+    .table-container { padding:16px 30px 30px; overflow-x:auto; }
+
+    .badge {
+        display:inline-block; padding:3px 10px; border-radius:20px; font-size:.72rem;
+        font-weight:600; color:#fff; vertical-align:middle;
+    }
+    .badge-green { background:#4CAF50; }
+    .badge-blue { background:#667eea; }
+    .badge-orange { background:#FF9800; }
+    .badge-red { background:#e74c3c; }
+    .badge-purple { background:#764ba2; }
+    .badge-gray { background:#999; }
+
+    .content-section { padding:24px 30px; }
+    .section-title {
+        font-size:1.2rem; font-weight:700; color:#2c3e50; margin-bottom:16px;
+        padding-left:14px; border-left:4px solid var(--primary);
+        display:flex; align-items:center; gap:8px;
+    }
+    .section-desc { color:#666; margin-bottom:20px; font-size:.95rem; line-height:1.8; }
+
+    .card {
+        background:#fff; border-radius:var(--border-radius); padding:24px; margin-bottom:20px;
+        box-shadow:0 4px 20px rgba(0,0,0,.06); border:1px solid #eef0f5; transition:var(--transition);
+    }
+    .card:hover { box-shadow:0 8px 32px rgba(0,0,0,.1); transform:translateY(-2px); }
+    .card-header { display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+    .card-icon {
+        width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+        font-size:1.3rem; flex-shrink:0; color:#fff;
+    }
+    .card-title { font-size:1.1rem; font-weight:700; color:#2c3e50; }
+    .card-subtitle { font-size:.82rem; color:#999; margin-top:2px; }
+
+    .tier-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin:20px 0; }
+    .tier-card {
+        border-radius:12px; padding:20px 14px; text-align:center;
+        transition: transform .2s; box-shadow: 0 2px 10px rgba(0,0,0,.04);
+    }
+    .tier-card:hover { transform:translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,.1); }
+    .tier-label { font-size:.85rem; font-weight:600; margin-bottom:6px; opacity:.8; }
+    .tier-amount { font-size:1.6rem; font-weight:800; }
+    .tier-note { font-size:.75rem; margin-top:8px; opacity:.7; }
+    .t1 { background:linear-gradient(135deg,#e8f5e9,#c8e6c9); color:#2e7d32; border:1px solid #a5d6a7; }
+    .t2 { background:linear-gradient(135deg,#e3f2fd,#bbdefb); color:#1565c0; border:1px solid #90caf9; }
+    .t3 { background:linear-gradient(135deg,#fff3e0,#ffe0b2); color:#e65100; border:1px solid #ffcc80; }
+    .t4 { background:linear-gradient(135deg,#fbe9e7,#ffccbc); color:#bf360c; border:1px solid #ffab91; }
+    .t5 { background:linear-gradient(135deg,#ffebee,#ffcdd2); color:#c62828; border:1px solid #ef9a9a; }
+
+    .rule-table { width:100%; border-collapse:collapse; font-size:.88rem; margin-bottom:16px; }
+    .rule-table thead { background:var(--header-gradient); color:#fff; }
+    .rule-table th { padding:10px 14px; text-align:center; font-weight:600; }
+    .rule-table td { padding:10px 14px; text-align:center; border-bottom:1px solid #f0f0f0; }
+    .rule-table tbody tr:hover { background:#f0f3ff; }
+    .rule-table .result { font-weight:700; }
+
+    .info-box {
+        border-radius:12px; padding:16px 20px; margin-top:14px; font-size:.9rem;
+    }
+    .info-box p { margin-bottom:6px; }
+    .info-box p:last-child { margin-bottom:0; }
+    .info-blue { background:#e3f2fd; border-left:4px solid #2196F3; color:#1565c0; }
+    .info-amber { background:#fff8e1; border-left:4px solid #FFC107; color:#f57f17; }
+    .info-green { background:#e8f5e9; border-left:4px solid #4CAF50; color:#2e7d32; }
+    .info-red { background:#ffebee; border-left:4px solid #ef5350; color:#c62828; }
+
+    .process-flow { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin:24px 0; }
+    .process-step {
+        background:#fff; border-radius:14px; padding:22px 16px; text-align:center;
+        position:relative; border:1px solid #eef0f5;
+        box-shadow:0 4px 16px rgba(0,0,0,.06); transition:var(--transition);
+    }
+    .process-step:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(0,0,0,.1); }
+    .step-num {
+        width:36px; height:36px; border-radius:50%; background:var(--header-gradient); color:#fff;
+        display:inline-flex; align-items:center; justify-content:center; font-weight:700; font-size:.95rem; margin-bottom:10px;
+    }
+    .process-step h4 { font-size:.95rem; margin-bottom:6px; color:#2c3e50; }
+    .process-step p { font-size:.82rem; color:#888; line-height:1.6; }
+    .process-step::after {
+        content:'\f054'; font-family:'Font Awesome 6 Free'; font-weight:900;
+        position:absolute; right:-14px; top:50%; transform:translateY(-50%);
+        color:#c3cfe2; font-size:.8rem;
+    }
+    .process-step:last-child::after { display:none; }
+
+    .member-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:12px; padding:20px 30px; }
+    .member-card {
+        background:#fff; border:2px solid #e8eaf6; border-radius:14px; padding:16px;
+        display:flex; align-items:center; gap:12px; transition:var(--transition);
+        box-shadow: 0 2px 8px rgba(0,0,0,.04); cursor:default;
+    }
+    .member-card:hover { border-color:var(--primary); box-shadow:0 6px 16px rgba(102,126,234,.12); transform:translateY(-2px); }
+    .member-avatar {
+        width:40px; height:40px; border-radius:10px; background:var(--header-gradient);
+        color:#fff; display:flex; align-items:center; justify-content:center;
+        font-weight:700; font-size:.85rem; flex-shrink:0;
+    }
+    .member-info { flex:1; min-width:0; }
+    .member-cn { font-weight:700; font-size:.95rem; color:#2c3e50; }
+    .member-en { font-size:.75rem; color:#999; }
+    .member-idx { font-size:.7rem; color:#bbb; font-weight:600; }
+
+    .arch-diagram { display:flex; flex-direction:column; align-items:center; gap:16px; padding:10px 0; }
+    .arch-root {
+        padding:16px 40px; border-radius:12px; font-weight:700; font-size:1.1rem;
+        background:var(--header-gradient); color:#fff;
+        box-shadow: 0 4px 16px rgba(102,126,234,.3);
+    }
+    .arch-arrow { color:#c3cfe2; font-size:1.2rem; }
+    .arch-row { display:flex; gap:14px; flex-wrap:wrap; justify-content:center; }
+    .arch-node {
+        flex:1; min-width:180px; max-width:300px; padding:16px; border-radius:12px;
+        text-align:center; font-weight:600; border:1px solid; transition:var(--transition);
+    }
+    .arch-node:hover { transform:translateY(-3px); box-shadow:0 6px 16px rgba(0,0,0,.08); }
+    .arch-node .node-icon { font-size:1.6rem; margin-bottom:6px; display:block; }
+    .arch-node .node-sub { font-size:.78rem; font-weight:400; opacity:.7; margin-top:4px; display:block; }
+    .arch-tier-bar {
+        padding:14px 30px; border-radius:10px; background:#f8f9ff; border:1px solid #eef0f5;
+        font-size:.88rem; color:#555; text-align:center;
+    }
+    .arch-tier-bar strong { color:var(--primary); }
+
+    .compare-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:16px; margin:20px 0; }
+    .compare-item {
+        border-radius:12px; padding:20px; transition:var(--transition);
+    }
+    .compare-item:hover { transform:translateY(-2px); }
+    .compare-item h4 { margin-bottom:8px; font-size:1rem; }
+
+    .footer {
+        padding:20px 40px; background:linear-gradient(135deg, #f8f9ff 0%, #f0f2f5 100%); text-align:center; color:#999;
+        border-top:1px solid #eaeaea; font-size:.85rem;
+    }
+
+    @media (max-width:768px) {
+        .header h1 { font-size:1.6rem; }
+        .tier-grid { grid-template-columns:repeat(3,1fr); }
+        .process-flow { grid-template-columns:repeat(2,1fr); }
+        .process-step::after { display:none; }
+        .compare-grid { grid-template-columns:1fr; }
+        .member-grid { grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); }
+        .tab-btn { padding:10px 14px; font-size:.85rem; }
+    }
+    @keyframes slideIn { from{opacity:0;transform:translateX(40px);} to{opacity:1;transform:translateX(0);} }
+
+    /* ====== Registration Tab Styles ====== */
+    .reg-layout { display:grid; grid-template-columns:260px 1fr; gap:20px; padding:20px 30px; align-items:start; }
+    .reg-sidebar { background:#fff; border-radius:var(--border-radius); padding:20px; box-shadow:0 4px 20px rgba(0,0,0,.06); border:1px solid #eef0f5; position:sticky; top:70px; max-height:calc(100vh - 100px); overflow-y:auto; }
+    .reg-sidebar .search-box { margin-bottom:14px; max-width:100%; }
+    .reg-member-item { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:10px; cursor:pointer; transition:var(--transition); margin-bottom:3px; border:2px solid transparent; }
+    .reg-member-item:hover { background:#f0f3ff; border-color:#d0d7f7; }
+    .reg-member-item.active { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; border-color:transparent; box-shadow:0 4px 12px rgba(102,126,234,.3); }
+    .reg-member-item.active .member-en { color:rgba(255,255,255,.75); }
+    .reg-member-item.active .reg-status { color:rgba(255,255,255,.9)!important; }
+    .reg-status { margin-left:auto; font-size:.72rem; font-weight:700; white-space:nowrap; }
+    .reg-main { display:flex; flex-direction:column; gap:16px; }
+    .reg-input-row { display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:10px; margin-bottom:8px; background:#f8f9ff; border:1px solid #eef0f5; transition:var(--transition); }
+    .reg-input-row:focus-within { border-color:var(--primary); background:#f0f4ff; box-shadow:0 0 0 3px rgba(102,126,234,.1); }
+    .reg-cat-icon { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:.9rem; flex-shrink:0; }
+    .reg-cat-name { font-weight:600; font-size:.86rem; color:#2c3e50; min-width:120px; }
+    .reg-input-row input[type="number"] { width:72px; padding:7px 10px; border:2px solid #e0e0e0; border-radius:8px; text-align:center; font-size:.95rem; font-weight:700; transition:var(--transition); }
+    .reg-input-row input[type="number"]:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 2px rgba(102,126,234,.15); }
+    .reg-cat-unit { font-size:.82rem; color:#999; min-width:20px; }
+    .reg-summary-row { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:18px; }
+    .reg-summary-item { text-align:center; padding:18px 12px; border-radius:12px; }
+    .reg-summary-item .val { font-size:2rem; font-weight:800; }
+    .reg-summary-item .lbl { font-size:.82rem; opacity:.75; margin-top:4px; }
+    .reg-cat-detail { display:flex; align-items:center; gap:10px; padding:11px 14px; border-radius:8px; margin-bottom:6px; background:#fafbff; border:1px solid #eef0f5; transition:var(--transition); }
+    .reg-cat-detail:hover { background:#f0f3ff; }
+    .reg-cat-detail-icon { font-size:1rem; width:20px; text-align:center; }
+    .reg-cat-detail-name { font-size:.86rem; color:#555; min-width:110px; font-weight:500; }
+    .reg-cat-detail-count { font-size:1.1rem; font-weight:800; min-width:40px; text-align:center; color:#2c3e50; }
+    .reg-cat-detail-arrow { color:#ccc; font-size:.8rem; }
+    .reg-cat-detail-tier { margin-left:auto; }
+    .reg-period-bar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .reg-period-bar input[type="date"] { padding:7px 12px; border:2px solid #e0e0e0; border-radius:8px; font-size:.88rem; font-weight:600; color:var(--primary); transition:var(--transition); }
+    .reg-period-bar input[type="date"]:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(102,126,234,.15); }
+    .reg-period-sep { font-weight:700; color:#bbb; font-size:1rem; }
+    .btn-apply { padding:7px 16px; border:none; border-radius:8px; font-size:.85rem; font-weight:600; cursor:pointer; background:var(--header-gradient); color:#fff; transition:var(--transition); display:inline-flex; align-items:center; gap:6px; }
+    .btn-apply:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(102,126,234,.2); }
+    .reg-period-display { font-size:.85rem; color:#888; margin-left:auto; display:flex; align-items:center; gap:6px; }
+
+    @media (max-width:768px) {
+        .reg-layout { grid-template-columns:1fr; }
+        .reg-sidebar { position:static; max-height:none; }
+        .reg-summary-row { grid-template-columns:1fr; }
+    }
+    @media (max-width:480px) {
+        .reg-layout { padding:12px 16px; }
+    }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1><i class="fas fa-clipboard-check"></i> 团队绩效扣罚管理制度</h1>
+    <p class="subtitle">通航审计团队 &middot; 分档阶梯式扣罚方案 &middot; 完整制度文档</p>
+    <div class="stats-bar">
+        <div class="stat-box"><span class="stat-value">15</span><span class="stat-label">团队成员</span></div>
+        <div class="stat-box"><span class="stat-value">3</span><span class="stat-label">考核板块</span></div>
+        <div class="stat-box"><span class="stat-value">5</span><span class="stat-label">扣罚类目</span></div>
+        <div class="stat-box"><span class="stat-value">5</span><span class="stat-label">扣罚档位</span></div>
+        <div class="stat-box"><span class="stat-value">3080</span><span class="stat-label">顶格标准条</span></div>
+    </div>
+</div>
+
+<div class="tab-bar">
+    <button class="tab-btn active" data-tab="overview"><i class="fas fa-sitemap"></i> 制度总览</button>
+    <button class="tab-btn" data-tab="register"><i class="fas fa-pen-to-square"></i> 扣罚登记</button>
+    <button class="tab-btn" data-tab="rules"><i class="fas fa-gavel"></i> 扣罚细则</button>
+    <button class="tab-btn" data-tab="compare"><i class="fas fa-balance-scale"></i> 对比速查</button>
+    <button class="tab-btn" data-tab="members"><i class="fas fa-users"></i> 适用人员</button>
+    <button class="tab-btn" data-tab="process"><i class="fas fa-route"></i> 执行流程</button>
+</div>
+
+<!-- ==================== Tab 1: 制度总览 ==================== -->
+<div class="tab-content active" id="tab-overview">
+    <div class="content-section">
+        <div class="section-title"><i class="fas fa-info-circle"></i> 制度说明</div>
+        <p class="section-desc">
+            本制度适用于<strong>通航审计团队全体成员</strong>（共15人），通过<strong>分档阶梯式扣罚机制</strong>规范日常工作中的质量行为。
+            涵盖<strong>审计数据、漏审计数据、巡查数据</strong>三大考核板块，共5类扣罚指标。
+            制度遵循"宽严相济、逐步递进"的原则——轻微问题以警告为主，严重问题逐级加重处罚。
+        </p>
+    </div>
+
+    <div class="content-section">
+        <div class="section-title"><i class="fas fa-project-diagram"></i> 制度架构图</div>
+        <div class="arch-diagram">
+            <div class="arch-root">团队绩效扣罚管理制度</div>
+            <div class="arch-arrow"><i class="fas fa-arrow-down"></i></div>
+            <div class="arch-row">
+                <div class="arch-node" style="background:#e3f2fd;color:#1565c0;border-color:#90caf9;">
+                    <span class="node-icon"><i class="fas fa-file-alt"></i></span>
+                    审计数据
+                    <span class="node-sub">月低级错误条数</span>
+                </div>
+                <div class="arch-node" style="background:#ede7f6;color:#5e35b1;border-color:#b39ddb;">
+                    <span class="node-icon"><i class="fas fa-eye-slash"></i></span>
+                    漏审计数据
+                    <span class="node-sub">月漏审次数</span>
+                </div>
+                <div class="arch-node" style="background:#e0f2f1;color:#00695c;border-color:#80cbc4;">
+                    <span class="node-icon"><i class="fas fa-search"></i></span>
+                    巡查数据
+                    <span class="node-sub">小结/低级错误/严重错误</span>
+                </div>
+            </div>
+            <div class="arch-arrow"><i class="fas fa-arrow-down"></i></div>
+            <div class="arch-tier-bar">
+                统一5档扣罚体系：<strong>第1档(200标准条)</strong> &rarr; <strong>第2档(600标准条)</strong> &rarr; <strong>第3档(1000标准条)</strong> &rarr; <strong>第4档(2000标准条)</strong> &rarr; <strong>第5档(3080标准条)</strong>
+            </div>
+            <div class="arch-arrow"><i class="fas fa-arrow-down"></i></div>
+            <div class="arch-row">
+                <div class="arch-node" style="background:#fff8e1;color:#f57f17;border-color:#ffe082;min-width:140px;max-width:180px;">
+                    <span class="node-icon"><i class="fas fa-exclamation-triangle"></i></span>
+                    警告
+                    <span class="node-sub">不扣款，仅提醒</span>
+                </div>
+                <div class="arch-node" style="background:#e8f5e9;color:#2e7d32;border-color:#a5d6a7;min-width:140px;max-width:180px;">
+                    <span class="node-icon"><i class="fas fa-coins"></i></span>
+                    扣罚
+                    <span class="node-sub">按档位扣款</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-section">
+        <div class="section-title"><i class="fas fa-layer-group"></i> 扣罚分档</div>
+        <p class="section-desc">所有扣罚类别统一对应以下5个档位。档位越高，说明违规越严重。</p>
+        <div class="tier-grid">
+            <div class="tier-card t1">
+                <div class="tier-label">第1档</div>
+                <div class="tier-amount">200条</div>
+                <div class="tier-note">轻度违规 (50元)</div>
+            </div>
+            <div class="tier-card t2">
+                <div class="tier-label">第2档</div>
+                <div class="tier-amount">600条</div>
+                <div class="tier-note">中度违规 (150元)</div>
+            </div>
+            <div class="tier-card t3">
+                <div class="tier-label">第3档</div>
+                <div class="tier-amount">1000条</div>
+                <div class="tier-note">较重违规 (250元)</div>
+            </div>
+            <div class="tier-card t4">
+                <div class="tier-label">第4档</div>
+                <div class="tier-amount">2000条</div>
+                <div class="tier-note">严重违规 (500元)</div>
+            </div>
+            <div class="tier-card t5">
+                <div class="tier-label">第5档</div>
+                <div class="tier-amount">3080条</div>
+                <div class="tier-note">极严重违规 (770元)</div>
+            </div>
+        </div>
+        <div class="info-box info-amber">
+            <p><i class="fas fa-lightbulb"></i> <strong>提示：</strong>扣罚以<strong>标准条数</strong>为单位（1000标准条 = 250元）。除第1~5档扣罚外，部分轻微问题仅给予<strong>警告</strong>处理，不涉及标准条扣罚。警告的目的是提醒改进、防微杜渐。</p>
+        </div>
+    </div>
+
+    <div class="content-section">
+        <div class="section-title"><i class="fas fa-lightbulb"></i> 设计逻辑</div>
+        <div class="compare-grid">
+            <div class="compare-item" style="background:#e8f5e9;">
+                <h4 style="color:#2e7d32;"><i class="fas fa-handshake"></i> 宽严相济</h4>
+                <p style="font-size:.9rem;color:#555;">低级错误、漏审问题给予警告缓冲处理，针对无心疏忽类问题适度容错；出现严重错误直接予以扣罚，明确区分无心失误与态度问题。</p>
+            </div>
+            <div class="compare-item" style="background:#e3f2fd;">
+                <h4 style="color:#1565c0;"><i class="fas fa-stairs"></i> 阶梯递进</h4>
+                <p style="font-size:.9rem;color:#555;">处罚以标准条数计，5档区间为200条至3080条（1000标准条=250元），采用非阶梯式递增规则，档位越高处罚增幅越大，强化约束警示效果。</p>
+            </div>
+            <div class="compare-item" style="background:#fff3e0;">
+                <h4 style="color:#e65100;"><i class="fas fa-th-large"></i> 分类管理</h4>
+                <p style="font-size:.9rem;color:#555;">审计、漏审、巡查三大模块实行独立考核，结合各板块工作特性，对不同类型问题设置差异化容错标准与处罚力度。</p>
+            </div>
+            <div class="compare-item" style="background:#ede7f6;">
+                <h4 style="color:#5e35b1;"><i class="fas fa-balance-scale"></i> 统一标准</h4>
+                <p style="font-size:.9rem;color:#555;">全类别违规问题统一适用该5档处罚体系，保障同责同罚，杜绝同类问题处罚标准不一的情况。</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-section">
+        <div class="section-title"><i class="fas fa-chart-bar"></i> 扣罚金额可视化</div>
+        <p class="section-desc">第3档到第5档的增幅明显加大，体现"越往后罚越重"的设计意图（1000标准条 = 250元）。</p>
+        <div style="position:relative;width:100%;height:300px;padding:0 30px;">
+            <canvas id="tierChart" role="img" aria-label="扣罚金额阶梯图"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== Tab 2: 扣罚登记 ==================== -->
+<div class="tab-content" id="tab-register">
+    <div class="controls">
+        <div class="reg-period-bar">
+            <i class="fas fa-calendar-alt" style="color:var(--primary);"></i>
+            <span style="font-weight:600;color:#2c3e50;font-size:.9rem;">统计周期：</span>
+            <input type="date" id="regStartDate">
+            <span class="reg-period-sep">~</span>
+            <input type="date" id="regEndDate">
+            <button class="btn-apply" onclick="applyPeriod()"><i class="fas fa-check"></i> 应用</button>
+        </div>
+        <div class="reg-period-display" id="regGlobalInfo"></div>
+    </div>
+    <div class="reg-layout">
+        <div class="reg-sidebar">
+            <div class="section-title" style="font-size:1rem;margin-bottom:12px;"><i class="fas fa-users"></i> 选择人员</div>
+            <div class="search-box" style="margin-bottom:14px;max-width:100%;">
+                <i class="fas fa-search"></i>
+                <input type="text" id="regMemberSearch" placeholder="搜索姓名...">
+            </div>
+            <div id="regMemberList"></div>
+        </div>
+        <div class="reg-main">
+            <div class="card" style="margin-bottom:0;">
+                <div class="card-header">
+                    <div class="card-icon" style="background:var(--header-gradient);"><i class="fas fa-pen-to-square"></i></div>
+                    <div><div class="card-title" id="regFormTitle">请选择人员</div><div class="card-subtitle">登记每日扣罚数据，累计自动匹配档位</div></div>
+                </div>
+                <div id="regFormContent" style="display:none;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+                        <div><label style="font-size:.82rem;font-weight:600;color:#555;display:block;margin-bottom:4px;">登记日期</label><input type="date" id="regDate" style="width:100%;padding:8px 12px;border:2px solid #e0e0e0;border-radius:8px;font-size:.9rem;"></div>
+                        <div><label style="font-size:.82rem;font-weight:600;color:#555;display:block;margin-bottom:4px;">备注（选填）</label><input type="text" id="regNote" placeholder="可选备注..." style="width:100%;padding:8px 12px;border:2px solid #e0e0e0;border-radius:8px;font-size:.9rem;"></div>
+                    </div>
+                    <div id="regInputs"></div>
+                    <button class="btn btn-primary" style="width:100%;margin-top:12px;padding:12px;font-size:.95rem;" onclick="submitRecord()"><i class="fas fa-save"></i> 提交登记</button>
+                    <div style="text-align:center;margin-top:8px;font-size:.78rem;color:#aaa;">同日期重复提交将自动覆盖更新</div>
+                </div>
+                <div id="regFormPlaceholder" style="text-align:center;padding:40px 20px;color:#bbb;">
+                    <i class="fas fa-hand-pointer" style="font-size:2.5rem;"></i>
+                    <p style="margin-top:12px;font-size:.95rem;">请从左侧选择人员开始登记</p>
+                </div>
+            </div>
+            <div class="card" id="regSummaryCard" style="display:none;margin-bottom:0;">
+                <div class="card-header">
+                    <div class="card-icon" style="background:linear-gradient(135deg,#26a69a,#00695c);"><i class="fas fa-chart-pie"></i></div>
+                    <div><div class="card-title" id="regSummaryTitle">本月统计</div><div class="card-subtitle">当前周期累计数据与扣罚结果</div></div>
+                </div>
+                <div id="regSummaryContent"></div>
+            </div>
+            <div class="card" id="regHistoryCard" style="display:none;margin-bottom:0;">
+                <div class="card-header">
+                    <div class="card-icon" style="background:linear-gradient(135deg,#78909c,#37474f);"><i class="fas fa-history"></i></div>
+                    <div><div class="card-title">登记记录</div><div class="card-subtitle">当前周期内的每日登记明细</div></div>
+                </div>
+                <div style="overflow-x:auto;" id="regHistoryContent"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== Tab 3: 扣罚细则 ==================== -->
+<div class="tab-content" id="tab-rules">
+
+    <!-- 审计数据 -->
+    <div class="content-section">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon" style="background:linear-gradient(135deg,#42a5f5,#1565c0);"><i class="fas fa-file-alt"></i></div>
+                <div>
+                    <div class="card-title">A. 审计数据 — 月低级错误</div>
+                    <div class="card-subtitle">统计周期：每月 | 指标：低级错误条数 | 容忍度：中等</div>
+                </div>
+            </div>
+            <p style="font-size:.9rem;color:#666;margin-bottom:16px;">
+                审核人员在日常审计工作中产生的<strong>低级错误</strong>（如格式不规范、基础判断失误等），按月统计总条数，对应不同扣罚档位。错误越多，扣罚越重。
+            </p>
+            <table class="rule-table">
+                <thead><tr><th>月低级错误条数</th><th>扣罚档位</th><th>扣罚标准条</th><th>严重程度</th></tr></thead>
+                <tbody>
+                    <tr><td>5 条</td><td>第1档</td><td class="result">200 标准条 (50元)</td><td><span class="badge badge-green">轻度</span></td></tr>
+                    <tr><td>7 条</td><td>第2档</td><td class="result">600 标准条 (150元)</td><td><span class="badge badge-blue">中度</span></td></tr>
+                    <tr><td>9 条</td><td>第3档</td><td class="result">1000 标准条 (250元)</td><td><span class="badge badge-orange">较重</span></td></tr>
+                    <tr><td>12 条</td><td>第4档</td><td class="result">2000 标准条 (500元)</td><td><span class="badge badge-red">严重</span></td></tr>
+                    <tr><td>15 条</td><td>第5档</td><td class="result">3080 标准条 (770元)</td><td><span class="badge badge-red">极严重</span></td></tr>
+                </tbody>
+            </table>
+            <div class="info-box info-blue">
+                <p><i class="fas fa-book-open"></i> <strong>通俗解读：</strong>每月低级错误达到 <strong>5条</strong> 起开始扣罚。5~6条第1档(50元)，7~8条第2档(150元)，9~11条第3档(250元)，12~14条第4档(500元)，15条及以上第5档(770元，顶格)。</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 漏审计数据 -->
+    <div class="content-section">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon" style="background:linear-gradient(135deg,#ab47bc,#6a1b9a);"><i class="fas fa-eye-slash"></i></div>
+                <div>
+                    <div class="card-title">B. 漏审计数据</div>
+                    <div class="card-subtitle">统计周期：每月 | 指标：漏审次数 | 容忍度：较低</div>
+                </div>
+            </div>
+            <p style="font-size:.9rem;color:#666;margin-bottom:16px;">
+                <strong>漏审</strong>是指应当审计但未审计的数据条目。漏审直接关系到内容安全，因此扣罚梯度更密、处罚更严。<strong>1~2次仅警告</strong>，3次起正式扣罚。
+            </p>
+            <table class="rule-table">
+                <thead><tr><th>月漏审次数</th><th>扣罚档位</th><th>扣罚标准条</th><th>严重程度</th></tr></thead>
+                <tbody>
+                    <tr><td>1~2 次</td><td>-</td><td class="result" style="color:#e65100;">警告</td><td><span class="badge badge-orange">提醒</span></td></tr>
+                    <tr><td>3~4 次</td><td>第1档</td><td class="result">200 标准条 (50元)</td><td><span class="badge badge-green">轻度</span></td></tr>
+                    <tr><td>5~7 次</td><td>第2档</td><td class="result">600 标准条 (150元)</td><td><span class="badge badge-blue">中度</span></td></tr>
+                    <tr><td>8~10 次</td><td>第3档</td><td class="result">1000 标准条 (250元)</td><td><span class="badge badge-orange">较重</span></td></tr>
+                    <tr><td>11~14 次</td><td>第4档</td><td class="result">2000 标准条 (500元)</td><td><span class="badge badge-red">严重</span></td></tr>
+                    <tr><td>15 次及以上</td><td>第5档</td><td class="result">3080 标准条 (770元)</td><td><span class="badge badge-red">极严重</span></td></tr>
+                </tbody>
+            </table>
+            <div class="info-box info-blue">
+                <p><i class="fas fa-book-open"></i> <strong>通俗解读：</strong>漏审容忍度很低。<strong>1~2次</strong>仅警告不扣钱，从<strong>第3次</strong>起正式扣罚。15次及以上顶格770元。相比审计低级错误，漏审的起罚门槛更低、处罚更严厉。</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 巡查数据 -->
+    <div class="content-section">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon" style="background:linear-gradient(135deg,#26a69a,#00695c);"><i class="fas fa-search"></i></div>
+                <div>
+                    <div class="card-title">C. 巡查数据</div>
+                    <div class="card-subtitle">统计周期：每月 | 包含3类巡查指标</div>
+                </div>
+            </div>
+            <p style="font-size:.9rem;color:#666;margin-bottom:20px;">
+                巡查环节涉及<strong>3类问题</strong>，从疏忽到严重失误分别对应不同扣罚力度。巡查小结未填写属于工作态度问题，低级错误属于粗心大意，严重错误属于业务能力缺失。
+            </p>
+
+            <h4 style="color:#00695c;margin-bottom:10px;"><i class="fas fa-angle-right"></i> C1. 巡查小结/汇总数据未填写</h4>
+            <div style="background:#e0f2f1;border-radius:8px;padding:12px 16px;margin-bottom:12px;font-size:.82rem;color:#00695c;">
+                <i class="fas fa-shield-alt"></i> 容忍度评级：<strong>最低</strong> | 无警告缓冲 | 1次即罚
+            </div>
+            <table class="rule-table">
+                <thead><tr><th>月发生次数</th><th>扣罚档位</th><th>扣罚标准条</th><th>严重程度</th></tr></thead>
+                <tbody>
+                    <tr><td>1 次</td><td>第1档</td><td class="result">200 标准条 (50元)</td><td><span class="badge badge-green">轻度</span></td></tr>
+                    <tr><td>2 次</td><td>第2档</td><td class="result">600 标准条 (150元)</td><td><span class="badge badge-blue">中度</span></td></tr>
+                    <tr><td>3 次</td><td>第3档</td><td class="result">1000 标准条 (250元)</td><td><span class="badge badge-orange">较重</span></td></tr>
+                    <tr><td>4 次</td><td>第4档</td><td class="result">2000 标准条 (500元)</td><td><span class="badge badge-red">严重</span></td></tr>
+                    <tr><td>5 次及以上</td><td>第5档</td><td class="result">3080 标准条 (770元)</td><td><span class="badge badge-red">极严重</span></td></tr>
+                </tbody>
+            </table>
+            <div class="info-box info-green">
+                <p><i class="fas fa-book-open"></i> <strong>通俗解读：</strong>巡查小结属于<strong>基础性工作要求</strong>，1次未填写即扣50元（无警告缓冲），5次及以上直接顶格770元。这是所有类目中容忍度最低的类型之一。</p>
+            </div>
+
+            <h4 style="color:#00695c;margin:24px 0 10px;"><i class="fas fa-angle-right"></i> C2. 巡查低级错误（日期写错、数据贴错、写错等）</h4>
+            <div style="background:#e0f2f1;border-radius:8px;padding:12px 16px;margin-bottom:12px;font-size:.82rem;color:#00695c;">
+                <i class="fas fa-shield-alt"></i> 容忍度评级：<strong>中等</strong> | 1~2次警告缓冲 | 3次起罚
+            </div>
+            <table class="rule-table">
+                <thead><tr><th>月发生次数</th><th>扣罚档位</th><th>扣罚标准条</th><th>严重程度</th></tr></thead>
+                <tbody>
+                    <tr><td>1~2 次</td><td>-</td><td class="result" style="color:#e65100;">警告</td><td><span class="badge badge-orange">提醒</span></td></tr>
+                    <tr><td>3~4 次</td><td>第1档</td><td class="result">200 标准条 (50元)</td><td><span class="badge badge-green">轻度</span></td></tr>
+                    <tr><td>5~7 次</td><td>第2档</td><td class="result">600 标准条 (150元)</td><td><span class="badge badge-blue">中度</span></td></tr>
+                    <tr><td>8~10 次</td><td>第3档</td><td class="result">1000 标准条 (250元)</td><td><span class="badge badge-orange">较重</span></td></tr>
+                    <tr><td>11~14 次</td><td>第4档</td><td class="result">2000 标准条 (500元)</td><td><span class="badge badge-red">严重</span></td></tr>
+                    <tr><td>15 次及以上</td><td>第5档</td><td class="result">3080 标准条 (770元)</td><td><span class="badge badge-red">极严重</span></td></tr>
+                </tbody>
+            </table>
+            <div class="info-box info-green">
+                <p><i class="fas fa-book-open"></i> <strong>通俗解读：</strong>低级错误有<strong>2次警告缓冲期</strong>，第1~2次仅警告，从第3次起正式扣罚。处罚梯度与漏审一致，体现了对"粗心但非恶意"问题的适当宽容。</p>
+            </div>
+
+            <h4 style="color:#00695c;margin:24px 0 10px;"><i class="fas fa-angle-right"></i> C3. 巡查严重性错误（标签有害类型、忘记发小结等）</h4>
+            <div style="background:#ffebee;border-radius:8px;padding:12px 16px;margin-bottom:12px;font-size:.82rem;color:#c62828;">
+                <i class="fas fa-exclamation-circle"></i> 容忍度评级：<strong>最低</strong> | 无警告缓冲 | 1次即罚 | 涉及内容安全
+            </div>
+            <table class="rule-table">
+                <thead><tr><th>月发生次数</th><th>扣罚档位</th><th>扣罚标准条</th><th>严重程度</th></tr></thead>
+                <tbody>
+                    <tr><td>1 次</td><td>第1档</td><td class="result">200 标准条 (50元)</td><td><span class="badge badge-green">轻度</span></td></tr>
+                    <tr><td>2 次</td><td>第2档</td><td class="result">600 标准条 (150元)</td><td><span class="badge badge-blue">中度</span></td></tr>
+                    <tr><td>3 次</td><td>第3档</td><td class="result">1000 标准条 (250元)</td><td><span class="badge badge-orange">较重</span></td></tr>
+                    <tr><td>4 次</td><td>第4档</td><td class="result">2000 标准条 (500元)</td><td><span class="badge badge-red">严重</span></td></tr>
+                    <tr><td>5 次及以上</td><td>第5档</td><td class="result">3080 标准条 (770元)</td><td><span class="badge badge-red">极严重</span></td></tr>
+                </tbody>
+            </table>
+            <div class="info-box info-red">
+                <p><i class="fas fa-book-open"></i> <strong>通俗解读：</strong>严重性错误<strong>无警告缓冲</strong>，1次即扣50元。因为涉及"标签有害类型"等直接影响内容安全的问题，容忍度最低。处罚梯度与"小结未填写"一致，5次顶格770元。</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== Tab 3: 对比速查 ==================== -->
+<div class="tab-content" id="tab-compare">
+    <div class="content-section">
+        <div class="section-title"><i class="fas fa-table"></i> 各类目对比速查表</div>
+        <p class="section-desc">快速了解5类扣罚指标的核心差异——重点关注<strong>起罚阈值</strong>和<strong>是否有警告缓冲</strong>。</p>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>扣罚类目</th>
+                    <th>所属板块</th>
+                    <th>起罚阈值</th>
+                    <th>警告缓冲</th>
+                    <th>第1档</th>
+                    <th>第5档</th>
+                    <th>顶格标准条</th>
+                    <th>容忍度</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="font-weight:600;">审计-低级错误</td>
+                    <td><span class="badge badge-blue">审计</span></td>
+                    <td>5条</td>
+                    <td style="color:#e74c3c;font-weight:600;">无</td>
+                    <td>5条/200条</td>
+                    <td>15条/3080条</td>
+                    <td style="font-weight:700;">3080条</td>
+                    <td><span class="badge badge-orange">中等</span></td>
+                </tr>
+                <tr>
+                    <td style="font-weight:600;">漏审计数据</td>
+                    <td><span class="badge badge-purple">漏审</span></td>
+                    <td>3次</td>
+                    <td style="color:#4CAF50;font-weight:600;">1~2次</td>
+                    <td>3次/200条</td>
+                    <td>15次/3080条</td>
+                    <td style="font-weight:700;">3080条</td>
+                    <td><span class="badge badge-red">较低</span></td>
+                </tr>
+                <tr>
+                    <td style="font-weight:600;">巡查-小结未填</td>
+                    <td><span class="badge" style="background:#26a69a;">巡查</span></td>
+                    <td>1次</td>
+                    <td style="color:#e74c3c;font-weight:600;">无</td>
+                    <td>1次/200条</td>
+                    <td>5次/3080条</td>
+                    <td style="font-weight:700;">3080条</td>
+                    <td><span class="badge badge-gray">最低</span></td>
+                </tr>
+                <tr>
+                    <td style="font-weight:600;">巡查-低级错误</td>
+                    <td><span class="badge" style="background:#26a69a;">巡查</span></td>
+                    <td>3次</td>
+                    <td style="color:#4CAF50;font-weight:600;">1~2次</td>
+                    <td>3次/200条</td>
+                    <td>15次/3080条</td>
+                    <td style="font-weight:700;">3080条</td>
+                    <td><span class="badge badge-orange">中等</span></td>
+                </tr>
+                <tr>
+                    <td style="font-weight:600;">巡查-严重错误</td>
+                    <td><span class="badge" style="background:#26a69a;">巡查</span></td>
+                    <td>1次</td>
+                    <td style="color:#e74c3c;font-weight:600;">无</td>
+                    <td>1次/200条</td>
+                    <td>5次/3080条</td>
+                    <td style="font-weight:700;">3080条</td>
+                    <td><span class="badge badge-gray">最低</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="content-section">
+        <div class="section-title"><i class="fas fa-sort-amount-down"></i> 容忍度排行</div>
+        <p class="section-desc">从低到高排列，颜色越深代表容忍度越低、管理越严格。</p>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="background:#ffebee;border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:16px;border:1px solid #ef9a9a;">
+                <div style="width:60px;height:60px;border-radius:10px;background:linear-gradient(135deg,#ef5350,#c62828);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.75rem;text-align:center;line-height:1.2;flex-shrink:0;">容忍度<br>最低</div>
+                <div style="flex:1;">
+                    <div style="font-weight:700;color:#c62828;margin-bottom:4px;">巡查小结未填写 / 巡查严重性错误</div>
+                    <div style="font-size:.85rem;color:#888;">1次起罚，无任何缓冲。这是制度的"高压线"。</div>
+                </div>
+            </div>
+            <div style="background:#fbe9e7;border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:16px;border:1px solid #ffab91;">
+                <div style="width:60px;height:60px;border-radius:10px;background:linear-gradient(135deg,#ff7043,#bf360c);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.75rem;text-align:center;line-height:1.2;flex-shrink:0;">容忍度<br>较低</div>
+                <div style="flex:1;">
+                    <div style="font-weight:700;color:#bf360c;margin-bottom:4px;">漏审计数据</div>
+                    <div style="font-size:.85rem;color:#888;">3次起罚，1~2次警告缓冲。直接关系内容安全。</div>
+                </div>
+            </div>
+            <div style="background:#fff3e0;border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:16px;border:1px solid #ffe082;">
+                <div style="width:60px;height:60px;border-radius:10px;background:linear-gradient(135deg,#ffa726,#e65100);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.75rem;text-align:center;line-height:1.2;flex-shrink:0;">容忍度<br>中等</div>
+                <div style="flex:1;">
+                    <div style="font-weight:700;color:#e65100;margin-bottom:4px;">审计低级错误 / 巡查低级错误</div>
+                    <div style="font-size:.85rem;color:#888;">审计5条起罚(无缓冲)；巡查3次起罚(有缓冲)。对粗心错误有一定容忍。</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== Tab 4: 适用人员 ==================== -->
+<div class="tab-content" id="tab-members">
+    <div class="content-section">
+        <div class="section-title"><i class="fas fa-users"></i> 适用人员名单（15人）</div>
+        <p class="section-desc">
+            本制度适用于以下全部团队成员。所有人员的审计、漏审、巡查数据均按统一标准进行月度统计与扣罚。
+        </p>
+    </div>
+    <div class="controls">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="memberSearch" placeholder="搜索姓名...">
+        </div>
+        <div style="display:flex;gap:10px;">
+            <span class="badge badge-blue" style="padding:8px 14px;font-size:.82rem;">共 15 人</span>
+        </div>
+    </div>
+    <div class="member-grid" id="memberGrid"></div>
+
+    <div class="content-section" style="padding-top:10px;">
+        <div class="section-title"><i class="fas fa-clipboard-list"></i> 人员扣罚关联说明</div>
+        <div class="card">
+            <p style="font-size:.9rem;color:#555;line-height:1.8;">
+                <i class="fas fa-check-circle" style="color:#4CAF50;"></i> 每位成员的<strong>审计低级错误</strong>、<strong>漏审次数</strong>、<strong>巡查小结填写</strong>、<strong>巡查低级错误</strong>、<strong>巡查严重错误</strong>数据均独立统计。<br>
+                <i class="fas fa-check-circle" style="color:#4CAF50;"></i> 同一成员在同一月份可能触发<strong>多个类目</strong>的扣罚（例如同时有漏审和巡查小结未填写）。<br>
+                <i class="fas fa-check-circle" style="color:#4CAF50;"></i> 扣罚结果按月公示，数据来源为通航任务分配管理系统的<strong>出勤记录</strong>和<strong>质检巡查记录</strong>。<br>
+                <i class="fas fa-exclamation-triangle" style="color:#FF9800;"></i> 如人员变动（新增/调离），按实际在岗月份计算，不在岗月份不计入统计。
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== Tab 5: 执行流程 ==================== -->
+<div class="tab-content" id="tab-process">
+    <div class="content-section">
+        <div class="section-title"><i class="fas fa-route"></i> 扣罚执行流程</div>
+        <p class="section-desc">扣罚执行遵循规范的四步流程，确保公平、透明、可追溯。</p>
+        <div class="process-flow">
+            <div class="process-step">
+                <div class="step-num">1</div>
+                <h4><i class="fas fa-database"></i> 数据采集</h4>
+                <p>每月末由质检/巡查人员统计各成员的审计、漏审、巡查错误数据</p>
+            </div>
+            <div class="process-step">
+                <div class="step-num">2</div>
+                <h4><i class="fas fa-calculator"></i> 档位匹配</h4>
+                <p>根据统计数据对照扣罚标准，确定每位成员的对应档位与金额</p>
+            </div>
+            <div class="process-step">
+                <div class="step-num">3</div>
+                <h4><i class="fas fa-bullhorn"></i> 结果公示</h4>
+                <p>每月扣罚结果向团队公示，接受成员申诉（3个工作日内）</p>
+            </div>
+            <div class="process-step">
+                <div class="step-num">4</div>
+                <h4><i class="fas fa-money-bill-wave"></i> 执行扣罚</h4>
+                <p>公示无异议后，在当月绩效中执行扣款，记录归档</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-section">
+        <div class="section-title"><i class="fas fa-shield-alt"></i> 申诉与复核机制</div>
+        <div class="card">
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+                <div style="text-align:center;padding:16px;">
+                    <div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#42a5f5,#1565c0);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:1.2rem;margin-bottom:10px;"><i class="fas fa-clock"></i></div>
+                    <h4 style="font-size:.9rem;margin-bottom:4px;">申诉时效</h4>
+                    <p style="font-size:.82rem;color:#888;">公示期内<br>3个工作日</p>
+                </div>
+                <div style="text-align:center;padding:16px;">
+                    <div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#ab47bc,#6a1b9a);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:1.2rem;margin-bottom:10px;"><i class="fas fa-user-shield"></i></div>
+                    <h4 style="font-size:.9rem;margin-bottom:4px;">复核责任人</h4>
+                    <p style="font-size:.82rem;color:#888;">业务骨干<br>公正复核</p>
+                </div>
+                <div style="text-align:center;padding:16px;">
+                    <div style="width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,#26a69a,#00695c);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:1.2rem;margin-bottom:10px;"><i class="fas fa-gavel"></i></div>
+                    <h4 style="font-size:.9rem;margin-bottom:4px;">最终结论</h4>
+                    <p style="font-size:.82rem;color:#888;">复核结果<br>即为终局</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-section">
+        <div class="section-title"><i class="fas fa-info-circle"></i> 补充说明</div>
+        <div class="card">
+            <p style="font-size:.9rem;color:#555;line-height:2;">
+                <i class="fas fa-angle-right" style="color:var(--primary);"></i> <strong>统计周期：</strong>按排班月统计，每月21日至下月20日。<br>
+                <i class="fas fa-angle-right" style="color:var(--primary);"></i> <strong>新入职人员：</strong>入职当月暂不记录扣罚制度。<br>
+                <i class="fas fa-angle-right" style="color:var(--primary);"></i> <strong>数据来源：</strong>审计数据来自通航审计系统&线下表格数据，巡查数据来自巡查人员记录。<br>
+                <i class="fas fa-angle-right" style="color:var(--primary);"></i> <strong>扣罚叠加：</strong>不同类目的扣罚独立计算，可叠加扣罚。扣罚以标准条数计量（1000标准条 = 250元）。<br>
+                <i class="fas fa-angle-right" style="color:var(--primary);"></i> <strong>特殊情况：</strong>因系统故障、任务变更等客观原因导致的数据异常，经核实后不计入统计。
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    <p>通航审计团队绩效扣罚管理制度 &mdash; 数据存储在浏览器本地，如有疑问请联系业务骨干</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ====== Tab Navigation ======
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+});
+
+// ====== Members Data ======
+const members = [
+    {en:'leoluan',cn:'栾涛'},{en:'xiaowsun',cn:'孙小雯'},{en:'shanshhao',cn:'郝姗姗'},
+    {en:'suzeeli',cn:'李晓'},{en:'pdaxingliu',cn:'刘鑫宇'},{en:'kikijiao',cn:'焦晓娜'},
+    {en:'shuaigechen',cn:'陈佳洛'},{en:'sfmi',cn:'米志华'},{en:'kimpmeng',cn:'孟鹏'},
+    {en:'luckcocoyu',cn:'于淼'},{en:'sshuangzhou',cn:'周双洋'},{en:'qianxiduan',cn:'段子晗'},
+    {en:'icebingzhao',cn:'赵冰冰'},{en:'sanyzhang',cn:'张颖'},{en:'tianyuma',cn:'马天宇'}
+];
+
+function renderMembers(filter='') {
+    const grid = document.getElementById('memberGrid');
+    const f = filter.toLowerCase();
+    const filtered = f ? members.filter(m => m.cn.includes(f) || m.en.toLowerCase().includes(f)) : members;
+    grid.innerHTML = filtered.map((m,i) => {
+        const initials = m.cn.slice(0,1);
+        const idx = members.indexOf(m) + 1;
+        return `<div class="member-card">
+            <div class="member-avatar">${initials}</div>
+            <div class="member-info">
+                <div class="member-cn">${m.cn}</div>
+                <div class="member-en">${m.en}</div>
+            </div>
+            <div class="member-idx">#${idx}</div>
+        </div>`;
+    }).join('');
+}
+renderMembers();
+
+document.getElementById('memberSearch').addEventListener('input', e => renderMembers(e.target.value));
+
+// ====== Chart ======
+new Chart(document.getElementById('tierChart'), {
+    type:'bar',
+    data:{ labels:['第1档','第2档','第3档','第4档','第5档'], datasets:[{label:'扣罚标准条数',data:[200,600,1000,2000,3080],backgroundColor:['#66bb6a','#42a5f5','#ffa726','#ff7043','#ef5350'],borderColor:['#388e3c','#1565c0','#e65100','#bf360c','#c62828'],borderWidth:1.5,borderRadius:8,maxBarThickness:80}] },
+    options:{ responsive:true,maintainAspectRatio:false, plugins:{legend:{display:false},tooltip:{callbacks:{afterLabel:ctx=>['','('+['50元','150元','250元','500元','770元'][ctx.dataIndex]+')'][ctx.dataIndex]}}}, scales:{y:{beginAtZero:true,title:{display:true,text:'扣罚标准条数',font:{size:12}},ticks:{callback:v=>v+'条'}},x:{title:{display:true,text:'扣罚档位',font:{size:12}}}} }
+});
+
+// ====== Penalty Registration System ======
+const STORAGE_KEY='penalty_records_v2';
+const catKeys=['audit_errors','miss_audit','patrol_summary','patrol_minor','patrol_severe'];
+const penaltyRules={
+    audit_errors:{name:'审计-低级错误',unit:'条',icon:'fa-file-alt',color:'#1565c0',thresholds:[{min:5,max:6,tier:1,amount:200,yuan:50},{min:7,max:8,tier:2,amount:600,yuan:150},{min:9,max:11,tier:3,amount:1000,yuan:250},{min:12,max:14,tier:4,amount:2000,yuan:500},{min:15,max:9999,tier:5,amount:3080,yuan:770}],warningMax:0},
+    miss_audit:{name:'漏审计数据',unit:'次',icon:'fa-eye-slash',color:'#6a1b9a',thresholds:[{min:3,max:4,tier:1,amount:200,yuan:50},{min:5,max:7,tier:2,amount:600,yuan:150},{min:8,max:10,tier:3,amount:1000,yuan:250},{min:11,max:14,tier:4,amount:2000,yuan:500},{min:15,max:9999,tier:5,amount:3080,yuan:770}],warningMax:2},
+    patrol_summary:{name:'巡查-小结未填',unit:'次',icon:'fa-clipboard',color:'#00695c',thresholds:[{min:1,max:1,tier:1,amount:200,yuan:50},{min:2,max:2,tier:2,amount:600,yuan:150},{min:3,max:3,tier:3,amount:1000,yuan:250},{min:4,max:4,tier:4,amount:2000,yuan:500},{min:5,max:9999,tier:5,amount:3080,yuan:770}],warningMax:0},
+    patrol_minor:{name:'巡查-低级错误',unit:'次',icon:'fa-pencil-alt',color:'#00838f',thresholds:[{min:3,max:4,tier:1,amount:200,yuan:50},{min:5,max:7,tier:2,amount:600,yuan:150},{min:8,max:10,tier:3,amount:1000,yuan:250},{min:11,max:14,tier:4,amount:2000,yuan:500},{min:15,max:9999,tier:5,amount:3080,yuan:770}],warningMax:2},
+    patrol_severe:{name:'巡查-严重错误',unit:'次',icon:'fa-exclamation-circle',color:'#c62828',thresholds:[{min:1,max:1,tier:1,amount:200,yuan:50},{min:2,max:2,tier:2,amount:600,yuan:150},{min:3,max:3,tier:3,amount:1000,yuan:250},{min:4,max:4,tier:4,amount:2000,yuan:500},{min:5,max:9999,tier:5,amount:3080,yuan:770}],warningMax:0}
+};
+const tierBadgeClass={1:'badge-green',2:'badge-blue',3:'badge-orange',4:'badge-red',5:'badge-red'};
+
+function calcCategory(key,count){const rule=penaltyRules[key];if(count<=0)return{status:'clean',tier:0,amount:0,label:'无违规',badge:''};if(rule.warningMax>0&&count<=rule.warningMax)return{status:'warning',tier:0,amount:0,label:'警告',badge:'badge-orange'};for(const t of rule.thresholds){if(count>=t.min&&count<=t.max)return{status:'penalty',tier:t.tier,amount:t.amount,label:'第'+t.tier+'档 '+t.amount+'条('+t.yuan+'元)',badge:tierBadgeClass[t.tier]};}return{status:'clean',tier:0,amount:0,label:'无违规',badge:''};}
+function getPeriodTotals(memberEn,startD,endD){const data=loadRecords();const totals={};catKeys.forEach(k=>totals[k]=0);Object.keys(data).forEach(pk=>{const recs=data[pk]&&data[pk][memberEn];if(!recs)return;recs.forEach(r=>{if(r.date>=startD&&r.date<=endD)catKeys.forEach(k=>totals[k]+=(parseInt(r[k])||0));});});return totals;}
+function getPeriodRecords(memberEn,startD,endD){const data=loadRecords();const all=[];Object.keys(data).forEach(pk=>{const recs=data[pk]&&data[pk][memberEn];if(!recs)return;recs.forEach(r=>{if(r.date>=startD&&r.date<=endD)all.push(r);});});all.sort((a,b)=>a.date.localeCompare(b.date));return all;}
+function getPeriodKey(){return document.getElementById('regStartDate').value+'~'+document.getElementById('regEndDate').value;}
+function loadRecords(){return JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');}
+function saveRecords(data){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}
+
+let selectedMember=null;
+
+function selectMember(en){
+    selectedMember=en;const m=members.find(x=>x.en===en);
+    document.getElementById('regFormTitle').textContent=m?m.cn+' - 登记扣罚':'登记扣罚';
+    document.getElementById('regFormContent').style.display='block';
+    document.getElementById('regFormPlaceholder').style.display='none';
+    document.getElementById('regSummaryCard').style.display='block';
+    document.getElementById('regHistoryCard').style.display='block';
+    document.getElementById('regDate').value=new Date().toISOString().slice(0,10);
+    catKeys.forEach(k=>document.getElementById('input_'+k).value='');
+    document.getElementById('regNote').value='';
+    document.querySelectorAll('.reg-member-item').forEach(el=>el.classList.toggle('active',el.dataset.en===en));
+    updateSummary();updateHistory();
+}
+
+function submitRecord(){
+    if(!selectedMember)return;
+    const startD=document.getElementById('regStartDate').value;
+    const endD=document.getElementById('regEndDate').value;
+    const date=document.getElementById('regDate').value;
+    const note=document.getElementById('regNote').value.trim();
+    if(!startD||!endD){showToast('请设置统计周期的起止日期','warning');return;}
+    if(!date){showToast('请选择登记日期','warning');return;}
+    if(date<startD||date>endD){showToast('登记日期不在统计周期范围内','warning');return;}
+    const periodKey=getPeriodKey();
+    const record={date,note};
+    catKeys.forEach(k=>record[k]=parseInt(document.getElementById('input_'+k).value)||0);
+    if(catKeys.every(k=>record[k]===0)){showToast('请至少输入一项扣罚数据','warning');return;}
+    const data=loadRecords();
+    if(!data[periodKey])data[periodKey]={};
+    if(!data[periodKey][selectedMember])data[periodKey][selectedMember]=[];
+    const idx=data[periodKey][selectedMember].findIndex(r=>r.date===date);
+    if(idx>=0){data[periodKey][selectedMember][idx]=record;showToast('已更新 '+date+' 的记录','success');}
+    else{data[periodKey][selectedMember].push(record);data[periodKey][selectedMember].sort((a,b)=>a.date.localeCompare(b.date));showToast('登记成功','success');}
+    saveRecords(data);
+    catKeys.forEach(k=>document.getElementById('input_'+k).value='');
+    document.getElementById('regNote').value='';
+    updateMemberList();updateSummary();updateHistory();
+}
+
+function deleteRecord(memberEn,date){
+    const periodKey=getPeriodKey();
+    const data=loadRecords();
+    if(data[periodKey]&&data[periodKey][memberEn]){
+        if(!confirm('确认删除 '+date+' 的登记记录？'))return;
+        data[periodKey][memberEn]=data[periodKey][memberEn].filter(r=>r.date!==date);
+        if(data[periodKey][memberEn].length===0)delete data[periodKey][memberEn];
+        if(data[periodKey]&&Object.keys(data[periodKey]).length===0)delete data[periodKey];
+        saveRecords(data);updateMemberList();updateSummary();updateHistory();showToast('记录已删除','info');
+    }
+}
+
+function updateSummary(){
+    if(!selectedMember)return;
+    const startD=document.getElementById('regStartDate').value;
+    const endD=document.getElementById('regEndDate').value;
+    if(!startD||!endD)return;
+    const totals=getPeriodTotals(selectedMember,startD,endD);
+    const m=members.find(x=>x.en===selectedMember);
+    let warnings=0,penalties=0,totalFine=0;
+    const catResults=catKeys.map(k=>{const r=calcCategory(k,totals[k]);if(r.status==='warning')warnings++;if(r.status==='penalty'){penalties++;totalFine+=r.amount;}return{key:k,total:totals[k],...r,rule:penaltyRules[k]};});
+    document.getElementById('regSummaryTitle').textContent=m.cn+' - '+startD+' ~ '+endD;
+    let html='<div class="reg-summary-row">';
+    html+='<div class="reg-summary-item" style="background:#fff8e1;border:1px solid #ffe082;"><div class="val" style="color:#e65100;">'+warnings+'</div><div class="lbl">警告项</div></div>';
+    html+='<div class="reg-summary-item" style="background:#ffebee;border:1px solid #ef9a9a;"><div class="val" style="color:#c62828;">'+penalties+'</div><div class="lbl">扣罚项</div></div>';
+    html+='<div class="reg-summary-item" style="background:#e8f5e9;border:1px solid #a5d6a7;"><div class="val" style="color:#2e7d32;">'+totalFine+'<span style="font-size:.85rem;">条</span></div><div class="lbl">扣罚标准条总额</div></div></div>';
+    catResults.forEach(cr=>{
+        html+='<div class="reg-cat-detail" style="border-left:4px solid '+cr.rule.color+';">';
+        html+='<div class="reg-cat-detail-icon" style="color:'+cr.rule.color+';"><i class="fas '+cr.rule.icon+'"></i></div>';
+        html+='<div class="reg-cat-detail-name">'+cr.rule.name+'</div>';
+        html+='<div class="reg-cat-detail-count">'+cr.total+'</div>';
+        html+='<div class="reg-cat-detail-arrow"><i class="fas fa-arrow-right"></i></div>';
+        html+='<div class="reg-cat-detail-tier">';
+        if(cr.status==='clean')html+='<span style="color:#999;font-size:.85rem;">无违规</span>';
+        else if(cr.status==='warning')html+='<span class="badge badge-orange">警告</span>';
+        else html+='<span class="badge '+cr.badge+'">'+cr.label+'</span>';
+        html+='</div></div>';
+    });
+    document.getElementById('regSummaryContent').innerHTML=html;
+}
+
+function updateHistory(){
+    if(!selectedMember)return;
+    const startD=document.getElementById('regStartDate').value;
+    const endD=document.getElementById('regEndDate').value;
+    if(!startD||!endD)return;
+    const records=getPeriodRecords(selectedMember,startD,endD);
+    if(records.length===0){document.getElementById('regHistoryContent').innerHTML='<div style="text-align:center;padding:30px;color:#bbb;"><i class="fas fa-inbox" style="font-size:2rem;"></i><p style="margin-top:8px;">暂无登记记录</p></div>';return;}
+    let html='<table class="rule-table"><thead><tr><th>日期</th><th>审计错误</th><th>漏审</th><th>小结未填</th><th>巡查低级</th><th>巡查严重</th><th>备注</th><th>操作</th></tr></thead><tbody>';
+    records.forEach(r=>{
+        html+='<tr><td style="font-weight:600;">'+r.date.slice(5)+'</td>';
+        html+='<td>'+(r.audit_errors||0)+'</td><td>'+(r.miss_audit||0)+'</td><td>'+(r.patrol_summary||0)+'</td><td>'+(r.patrol_minor||0)+'</td><td>'+(r.patrol_severe||0)+'</td>';
+        html+='<td style="color:#999;font-size:.8rem;">'+(r.note||'-')+'</td>';
+        html+='<td><button class="btn" style="padding:4px 10px;font-size:.78rem;background:#ffebee;color:#e74c3c;" onclick="deleteRecord(\''+selectedMember+'\',\''+r.date+'\')"><i class="fas fa-trash"></i></button></td></tr>';
+    });
+    html+='</tbody></table>';
+    document.getElementById('regHistoryContent').innerHTML=html;
+}
+
+function updateMemberList(filter){
+    const startD=document.getElementById('regStartDate').value;
+    const endD=document.getElementById('regEndDate').value;
+    if(!startD||!endD)return;
+    const f=(filter||'').toLowerCase();
+    const filtered=f?members.filter(m=>m.cn.includes(f)||m.en.toLowerCase().includes(f)):members;
+    let totalPenalties=0,totalWarnings=0;
+    document.getElementById('regMemberList').innerHTML=filtered.map(m=>{
+        const totals=getPeriodTotals(m.en,startD,endD);
+        let status='clean';
+        catKeys.forEach(k=>{const r=calcCategory(k,totals[k]);if(r.status==='penalty')status='penalty';else if(r.status==='warning'&&status==='clean')status='warning';});
+        if(status==='penalty')totalPenalties++;else if(status==='warning')totalWarnings++;
+        const isActive=selectedMember===m.en;
+        const sl=status==='penalty'?'<span class="reg-status" style="color:#e74c3c;">扣罚</span>':status==='warning'?'<span class="reg-status" style="color:#e65100;">警告</span>':'<span class="reg-status" style="color:#4CAF50;">正常</span>';
+        return '<div class="reg-member-item '+(isActive?'active':'')+'" data-en="'+m.en+'" onclick="selectMember(\''+m.en+'\')"><div class="member-avatar" style="width:32px;height:32px;font-size:.75rem;border-radius:8px;">'+m.cn.slice(0,1)+'</div><div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:.88rem;color:'+(isActive?'#fff':'#2c3e50')+';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+m.cn+'</div><div class="member-en">'+m.en+'</div></div>'+sl+'</div>';
+    }).join('');
+    document.getElementById('regGlobalInfo').innerHTML='<i class="fas fa-info-circle"></i> 当前周期('+startD.slice(5)+'~'+endD.slice(5)+')：'+totalPenalties+' 人扣罚，'+totalWarnings+' 人警告，'+(15-totalPenalties-totalWarnings)+' 人正常';
+}
+
+function showToast(msg,type){
+    const t=document.createElement('div');
+    t.style.cssText='position:fixed;top:80px;right:30px;padding:14px 24px;border-radius:12px;color:#fff;font-weight:600;font-size:.9rem;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.15);animation:slideIn .3s ease;';
+    t.style.background=type==='success'?'#4CAF50':type==='warning'?'#FF9800':'#3498db';
+    t.innerHTML='<i class="fas fa-'+(type==='success'?'check-circle':type==='warning'?'exclamation-triangle':'info-circle')+'"></i> '+msg;
+    document.body.appendChild(t);
+    setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300);},2500);
+}
+
+function applyPeriod(){
+    const startD=document.getElementById('regStartDate').value;
+    const endD=document.getElementById('regEndDate').value;
+    if(!startD||!endD){showToast('请选择起止日期','warning');return;}
+    if(startD>endD){showToast('开始日期不能晚于结束日期','warning');return;}
+    updateMemberList();
+    if(selectedMember){updateSummary();updateHistory();}
+    showToast('统计周期已更新','success');
+}
+
+(function initReg(){
+    const today=new Date();
+    const y=today.getFullYear(),m=String(today.getMonth()+1).padStart(2,'0');
+    const firstDay=y+'-'+m+'-01';
+    const todayStr=today.toISOString().slice(0,10);
+    document.getElementById('regStartDate').value=firstDay;
+    document.getElementById('regEndDate').value=todayStr;
+    document.getElementById('regInputs').innerHTML=catKeys.map(k=>{
+        const r=penaltyRules[k];
+        return '<div class="reg-input-row"><div class="reg-cat-icon" style="background:'+r.color+';"><i class="fas '+r.icon+'"></i></div><div class="reg-cat-name">'+r.name+'</div><input type="number" id="input_'+k+'" min="0" max="999" value="" placeholder="0"><div class="reg-cat-unit">'+r.unit+'</div></div>';
+    }).join('');
+    updateMemberList();
+    document.getElementById('regMemberSearch').addEventListener('input',e=>updateMemberList(e.target.value));
+})();
+</script>
+</body>
+</html>
